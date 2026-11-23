@@ -1,3 +1,4 @@
+
 import {
   BarChart3,
   BookOpen,
@@ -15,7 +16,8 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
+import { supabase } from "../lib/supabase";
+import { Navigate, NavLink, Outlet, useLocation } from "react-router";
 import { Brand } from "./Brand";
 import { Button } from "./ui";
 
@@ -49,8 +51,42 @@ function ThemeButton() {
 
 export function AppShell() {
   const [open, setOpen] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+  const [userEmail, setUserEmail] = useState("User");
   const location = useLocation();
-  useEffect(() => setOpen(false), [location.pathname]);
+  
+  
+  useEffect(() => {
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      setHasSession(!!data.session);
+      setUserEmail(data.session?.user.email ?? "User");
+      setSessionChecked(true);
+    }
+  
+    checkSession();
+  
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setHasSession(!!session);
+        setUserEmail(session?.user.email ?? "User");
+        setSessionChecked(true);
+      }
+    );
+  
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (!sessionChecked) {
+    return <div className="min-h-screen bg-canvas" />;
+  }
+  
+  if (!hasSession) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-canvas text-ink">
@@ -106,12 +142,16 @@ export function AppShell() {
           >
             <Settings size={18} /> Settings & account
           </NavLink>
-          <NavLink
-            to="/"
-            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted hover:bg-soft"
+          <button
+            type="button"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              window.location.href = "/";
+            }}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted hover:bg-soft"
           >
             <LogOut size={18} /> Sign out
-          </NavLink>
+          </button>
         </div>
       </aside>
 
@@ -139,7 +179,7 @@ export function AppShell() {
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-dark">
                 <UserRound size={17} />
               </span>
-              <span className="hidden text-sm font-semibold sm:inline">Mia Santos</span>
+              <span className="hidden text-sm font-semibold sm:inline">{userEmail}</span>
             </NavLink>
           </div>
         </header>
