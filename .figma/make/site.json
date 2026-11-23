@@ -1,0 +1,10 @@
+{
+  "description": "Helps online ESL tutors track classes, earnings, payments, workplaces, and income goals in one place, with clear insights into what they’ve earned and what’s still owed.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

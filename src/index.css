@@ -1,0 +1,151 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap");
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #76be3f;
+  --color-brand-dark: #467a26;
+  --color-brand-soft: #eaf6df;
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-soft: var(--soft);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-deep: #18352e;
+  --shadow-card: 0 1px 2px rgb(20 46 35 / 0.03), 0 8px 28px rgb(20 46 35 / 0.035);
+}
+
+:root {
+  --canvas: #f6f8f3;
+  --surface: #ffffff;
+  --soft: #eff3eb;
+  --ink: #18231d;
+  --muted: #69756e;
+  --line: #dfe6db;
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #101713;
+  --surface: #17201b;
+  --soft: #202b25;
+  --ink: #f1f6ef;
+  --muted: #9ba9a0;
+  --line: #2b3831;
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background: var(--canvas);
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  a,
+  input,
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  a {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  ::selection {
+    background: rgb(118 190 63 / 0.25);
+  }
+}
+
+@layer components {
+  .section-kicker {
+    margin-bottom: 0.75rem;
+    color: var(--color-brand-dark);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .dark .section-kicker {
+    color: var(--color-brand);
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.875rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+  }
+
+  .section-copy {
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .stat-brand {
+    background: #eaf6df;
+    color: #467a26;
+  }
+
+  .stat-teal {
+    background: #e2f3ef;
+    color: #2f7d6d;
+  }
+
+  .stat-amber {
+    background: #fff2d8;
+    color: #a16207;
+  }
+
+  .stat-blue {
+    background: #e7efff;
+    color: #3264b5;
+  }
+
+  .dark .stat-brand,
+  .dark .stat-teal,
+  .dark .stat-amber,
+  .dark .stat-blue {
+    background: var(--soft);
+  }
+}
+
+@media print {
+  aside,
+  header,
+  nav,
+  button {
+    display: none !important;
+  }
+
+  body,
+  main,
+  .lg\:pl-72 {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
