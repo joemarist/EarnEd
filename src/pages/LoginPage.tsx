@@ -1,4 +1,5 @@
 import { ArrowLeft, CheckCircle2, KeyRound, Mail, ShieldCheck } from "lucide-react";
+import { supabase } from "../lib/supabase";
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { z } from "zod";
@@ -11,21 +12,68 @@ const loginSchema = z.object({
 });
 
 export function LoginPage() {
-  const [mode, setMode] = useState<"password" | "magic" | "forgot" | "verify">("password");
+  const [mode, setMode] = useState<
+  "password" | "signup" | "magic" | "forgot" | "verify"
+>("password");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError("");
+  
     const data = Object.fromEntries(new FormData(event.currentTarget));
-    if (mode === "password") {
-      const parsed = loginSchema.safeParse(data);
-      if (!parsed.success) return setError(parsed.error.issues[0].message);
+    const parsed = loginSchema.safeParse(data);
+  
+    if (!parsed.success) {
+      setError(parsed.error.issues[0].message);
+      return;
+    }
+  
+    setIsLoading(true);
+  
+    try {
+      if (mode === "signup") {
+        const { data: signupData, error } = await supabase.auth.signUp({
+          email: parsed.data.email,
+          password: parsed.data.password,
+        });
+  
+        if (error) {
+          setError(error.message);
+          return;
+        }
+  
+        if (signupData.session) {
+          navigate("/app");
+        } else {
+          setMode("verify");
+        }
+  
+        return;
+      }
+  
+      if (mode !== "password") {
+        setError("This feature isn't available yet.");
+        return;
+      }
+  
+      const { error } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
+  
+      if (error) {
+        setError(error.message);
+        return;
+      }
+  
       navigate("/app");
-    } else {
-      const result = z.email("Enter a valid email address.").safeParse(data.email);
-      if (!result.success) return setError(result.error.issues[0].message);
-      setMode("verify");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -49,10 +97,13 @@ export function LoginPage() {
               </div>
               <h1 className="mt-6 font-display text-3xl font-bold">Check your inbox</h1>
               <p className="mt-3 text-sm leading-6 text-muted">
-                We sent a secure sign-in link to your email. It will expire in 15 minutes.
+              Your account request was received. Check your inbox for a confirmation email from Supabase before signing in.
               </p>
-              <Button className="mt-7 w-full" onClick={() => navigate("/app")}>
-                Open demo dashboard
+              <Button
+                className="mt-7 w-full"
+                onClick={() => setMode("password")}
+              >
+                Back to sign in
               </Button>
               <Button variant="ghost" className="mt-2" onClick={() => setMode("password")}>
                 Use another method
@@ -61,15 +112,25 @@ export function LoginPage() {
           ) : (
             <>
               <p className="text-sm font-bold text-brand">
-                {mode === "forgot" ? "Account recovery" : "Welcome back"}
+                {mode === "signup"
+                  ? "Get started"
+                  : mode === "forgot"
+                    ? "Account recovery"
+                    : "Welcome back"}
               </p>
               <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                {mode === "forgot" ? "Reset your password" : "Sign in to EarnEd"}
+              {mode === "signup"
+              ? "Create your EarnEd account"
+              : mode === "forgot"
+                ? "Reset your password"
+                : "Sign in to EarnEd"}
               </h1>
               <p className="mt-3 text-sm leading-6 text-muted">
-                {mode === "forgot"
-                  ? "We’ll email you a secure link to choose a new password."
-                  : "Your teaching income is waiting for you."}
+              {mode === "signup"
+              ? "Start tracking your teaching income with EarnEd."
+              : mode === "forgot"
+                ? "We’ll email you a secure link to choose a new password."
+                : "Your teaching income is waiting for you."}
               </p>
 
               {mode === "password" && (
@@ -77,7 +138,7 @@ export function LoginPage() {
                   <Button
                     variant="secondary"
                     className="mt-8 w-full"
-                    onClick={() => navigate("/app")}
+                    disabled
                   >
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-blue-600">
                       G
@@ -101,12 +162,13 @@ export function LoginPage() {
                   className="mt-2"
                   onChange={() => setError("")}
                 />
-                {mode === "password" && (
+                {(mode === "password" || mode === "signup") && (
                   <div className="mt-5">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-semibold">Password</label>
                       <button
                         type="button"
+                        disabled
                         className="text-xs font-semibold text-brand-dark dark:text-brand"
                         onClick={() => setMode("forgot")}
                       >
@@ -123,8 +185,16 @@ export function LoginPage() {
                   </div>
                 )}
                 {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
-                <Button type="submit" className="mt-6 w-full">
-                  {mode === "password" ? (
+                <Button
+                  type="submit"
+                  className="mt-6 w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    mode === "signup" ? "Creating account..." : "Signing in..."
+                  ) : mode === "signup" ? (
+                    "Create account"
+                  ) : mode === "password" ? (
                     <>
                       <KeyRound size={17} /> Sign in securely
                     </>
@@ -137,6 +207,7 @@ export function LoginPage() {
               </form>
               {mode === "password" ? (
                 <button
+                  disabled
                   className="mt-4 text-sm font-semibold text-brand-dark dark:text-brand"
                   onClick={() => setMode("magic")}
                 >
@@ -152,7 +223,14 @@ export function LoginPage() {
               )}
               <p className="mt-8 text-center text-xs leading-5 text-muted">
                 New to EarnEd?{" "}
-                <button className="font-bold text-ink" onClick={() => navigate("/app")}>
+                <button
+                  type="button"
+                  className="font-bold text-ink"
+                  onClick={() => {
+                    setError("");
+                    setMode("signup");
+                  }}
+                >
                   Create a free account
                 </button>
               </p>
