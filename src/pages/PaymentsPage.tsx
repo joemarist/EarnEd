@@ -405,10 +405,8 @@ export function PaymentsPage() {
       const [latestLogsResult, latestPaymentsResult] = await Promise.all([
         supabase
           .from("daily_logs")
-          .select("id, workplace_id, workplace, log_date, classes, rate_per_class, income")
-          .eq("user_id", signedInUser.id)
-          .gte("log_date", periodStart)
-          .lte("log_date", periodEnd),
+          .select("id, workplace_id, workplace, log_date, income")
+          .eq("user_id", signedInUser.id),
         supabase
           .from("payments")
           .select("id, amount, workplace_id, workplace_name, period_start, period_end, payment_date, currency, payment_method, reference_number, notes")
@@ -421,10 +419,15 @@ export function PaymentsPage() {
 
       const latestLogs = (latestLogsResult.data ?? []) as DailyLog[];
       const latestPayments = (latestPaymentsResult.data ?? []) as Payment[];
-      const latestExpected = latestLogs.reduce((total, log) => total + Number(log.income ?? 0), 0);
+      const latestExpected = latestLogs.reduce((total, log) =>
+        total + (log.log_date >= periodStart && log.log_date <= periodEnd
+          ? Number(log.income ?? 0)
+          : 0), 0);
       const latestAllocated = calculateAllocatedPayments(latestLogs, latestPayments, selectedWorkplace);
       const latestReceived = latestLogs.reduce((total, log) =>
-        total + (latestAllocated.allocatedByLog.get(log.id) ?? 0), 0);
+        total + (log.log_date >= periodStart && log.log_date <= periodEnd
+          ? (latestAllocated.allocatedByLog.get(log.id) ?? 0)
+          : 0), 0);
       const latestRemaining = Math.max(latestExpected - latestReceived, 0);
 
       if (latestExpected <= 0) {
