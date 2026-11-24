@@ -441,7 +441,7 @@ export function PaymentsPage() {
       }
 
       const { error } = await supabase.from("payments").insert({
-        user_id: sessionData.session.user.id,
+        user_id: signedInUser.id,
         workplace_id: selectedWorkplace.id,
         workplace_name: selectedWorkplace.name,
         period_start: periodStart,
