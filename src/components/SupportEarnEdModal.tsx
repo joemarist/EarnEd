@@ -25,7 +25,7 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/65 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-slate-950/65 p-3 backdrop-blur-md sm:p-5"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -35,65 +35,88 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
         aria-modal="true"
         aria-labelledby="support-earned-title"
         aria-describedby="support-earned-description"
-        className="relative my-auto w-full max-w-md overflow-hidden rounded-3xl border border-line bg-surface text-ink shadow-2xl"
+        className="relative w-full max-w-2xl overflow-hidden rounded-[1.75rem] border border-line bg-surface text-ink shadow-2xl"
       >
-        <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-brand/10 blur-3xl" />
-        <div className="relative p-5 sm:p-7">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close support message"
-            className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted transition hover:bg-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
-          >
-            <X size={19} />
-          </button>
+        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-brand/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-20 h-48 w-48 rounded-full bg-brand/10 blur-3xl" />
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-soft text-brand-dark dark:text-brand">
-            <HeartHandshake size={25} />
-          </div>
-          <p className="mt-5 text-xs font-bold uppercase tracking-[.16em] text-brand-dark dark:text-brand">
-            Optional community support
-          </p>
-          <h2 id="support-earned-title" className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
-            Help keep EarnEd running
-          </h2>
-          <p id="support-earned-description" className="mt-3 text-sm leading-6 text-muted">
-            EarnEd is free to use, and it will stay that way. If this tool has been helpful,
-            you may optionally support its hosting and maintenance so I can keep improving
-            it for the tutor community while completing my studies.
-          </p>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close support message"
+          className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-xl text-muted transition hover:bg-soft hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 sm:right-4 sm:top-4"
+        >
+          <X size={18} />
+        </button>
 
-          <div className="mt-5 rounded-2xl border border-line bg-canvas p-4">
-            <p className="text-center text-sm font-bold">Support through GCash</p>
-            <p className="mt-1 text-center text-xs leading-5 text-muted">
-              Scan the QR code with your GCash app. Any amount is appreciated, but never expected.
+        <div className="relative grid gap-4 p-4 sm:grid-cols-[1fr_0.9fr] sm:gap-6 sm:p-6">
+          <div className="flex min-w-0 flex-col justify-center">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-soft text-brand-dark dark:text-brand">
+              <HeartHandshake size={23} />
+            </div>
+
+            <p className="mt-3 text-[10px] font-extrabold uppercase tracking-[.17em] text-brand-dark dark:text-brand">
+              A little kindness goes a long way
             </p>
-            <div className="mx-auto mt-4 flex min-h-[250px] w-full max-w-[280px] items-center justify-center rounded-xl border border-line bg-white p-3">
+            <h2 id="support-earned-title" className="mt-1.5 max-w-sm font-display text-[1.65rem] font-extrabold leading-tight tracking-tight sm:text-3xl">
+              Help keep EarnEd growing.
+            </h2>
+            <p id="support-earned-description" className="mt-2 max-w-sm text-xs leading-[1.65] text-muted sm:text-sm">
+              EarnEd is free for every tutor. If it has helped you, you can optionally chip in toward hosting and maintenance, helping me keep it running while I finish my studies.
+            </p>
+
+            <div className="mt-4 rounded-2xl border border-brand/15 bg-brand-soft/65 px-3.5 py-3 dark:bg-brand/10">
+              <p className="text-xs font-bold leading-5 text-brand-dark dark:text-brand">
+                Always free. No subscriptions. No locked features. No pressure.
+              </p>
+            </div>
+
+            <p className="mt-3 text-[11px] leading-5 text-muted">
+              Thank you for being part of the EarnEd community. Your support is appreciated, never expected.
+            </p>
+          </div>
+
+          <div className="flex min-w-0 flex-col items-center justify-center rounded-2xl border border-line bg-canvas p-3 sm:p-4">
+            <div className="flex w-full items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-extrabold">Support via GCash</p>
+                <p className="mt-0.5 text-[10px] leading-4 text-muted sm:text-xs">
+                  Scan with your GCash app
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-brand-soft px-2.5 py-1 text-[10px] font-bold text-brand-dark dark:text-brand">
+                Optional
+              </span>
+            </div>
+
+            <div className="mt-3 flex h-[164px] w-[164px] items-center justify-center rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:mt-4 sm:h-[210px] sm:w-[210px] sm:p-2.5">
               {qrUnavailable ? (
-                <p className="px-4 text-center text-xs leading-5 text-slate-600">
+                <p className="px-3 text-center text-[11px] leading-5 text-slate-600">
                   The GCash QR image could not be loaded. Please try again later.
                 </p>
               ) : (
                 <img
                   src="/My_gcash.jpg"
-                  alt="GCash donation QR code for voluntarily supporting EarnEd"
+                  alt="GCash QR code for voluntarily supporting EarnEd"
                   onError={() => setQrUnavailable(true)}
-                  className="max-h-[270px] w-full object-contain"
+                  className="h-full w-full object-contain"
                 />
               )}
             </div>
-          </div>
-
-          <div className="mt-4 rounded-xl bg-brand-soft/70 px-4 py-3 text-center dark:bg-brand/10">
-            <p className="text-xs font-semibold leading-5 text-brand-dark dark:text-brand">
-              No subscriptions. No locked features. No pressure. EarnEd remains free for everyone.
+            <p className="mt-2 text-center text-[10px] leading-4 text-muted">
+              Any amount, only if you wish.
             </p>
           </div>
+        </div>
 
+        <div className="relative flex items-center justify-between gap-3 border-t border-line bg-soft/40 px-4 py-3 sm:px-6">
+          <p className="hidden text-[11px] leading-4 text-muted sm:block">
+            Thank you for helping keep this free tool available.
+          </p>
           <button
             type="button"
             onClick={onClose}
-            className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink transition hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink transition hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 sm:ml-auto sm:w-auto sm:min-w-32"
           >
             Maybe later
           </button>
