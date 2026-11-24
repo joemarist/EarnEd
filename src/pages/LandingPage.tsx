@@ -426,7 +426,8 @@ export function LandingPage() {
               </div>
             </div>
           </div>
-<p className="section-kicker">Made for independent tutors</p>
+          <div>
+            <p className="section-kicker">Made for independent tutors</p>
             <h2 className="section-title text-left">
               A clearer view of the work behind every paycheck.
             </h2>
