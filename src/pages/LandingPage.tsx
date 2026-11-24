@@ -369,6 +369,7 @@ export function LandingPage() {
                   transformOrigin: "left center",
                   transformStyle: "preserve-3d",
                   backfaceVisibility: "hidden",
+                  pointerEvents: profileUnwrapped ? "none" : "auto",
                 }}
               >
                 <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-brand text-3xl font-extrabold tracking-tight text-[#18352e]">
