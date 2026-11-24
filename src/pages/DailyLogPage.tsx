@@ -655,7 +655,7 @@ export function DailyLogPage() {
 
       {viewingDayLogs && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl dark:bg-card">
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl dark:bg-surface">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold">Daily Classes</h2>
               <button
