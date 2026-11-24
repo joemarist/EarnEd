@@ -1,32 +1,82 @@
 import { createBrowserRouter } from "react-router";
 import { AppShell } from "../components/AppShell";
-import { AccountPage } from "../pages/AccountPage";
-import { DailyLogPage } from "../pages/DailyLogPage";
-import { DashboardPage } from "../pages/DashboardPage";
-import { GoalsPage } from "../pages/GoalsPage";
-import { LandingPage } from "../pages/LandingPage";
-import { LoginPage } from "../pages/LoginPage";
-import { PaymentsPage } from "../pages/PaymentsPage";
-import { ReportsPage } from "../pages/ReportsPage";
-import { TutorialsPage } from "../pages/TutorialsPage";
-import { WorkplacesPage } from "../pages/WorkplacesPage";
 
 export const router = createBrowserRouter([
-  { path: "/", Component: LandingPage },
-  { path: "/login", Component: LoginPage },
+  {
+    path: "/",
+    lazy: async () => {
+      const { LandingPage } = await import("../pages/LandingPage");
+      return { Component: LandingPage };
+    },
+  },
+  {
+    path: "/login",
+    lazy: async () => {
+      const { LoginPage } = await import("../pages/LoginPage");
+      return { Component: LoginPage };
+    },
+  },
   {
     path: "/app",
     Component: AppShell,
     children: [
-      { index: true, Component: DashboardPage },
-      { path: "daily-log", Component: DailyLogPage },
-      { path: "payments", Component: PaymentsPage },
-      { path: "goals", Component: GoalsPage },
-      { path: "reports", Component: ReportsPage },
-      { path: "workplaces", Component: WorkplacesPage },
-      { path: "tutorials", Component: TutorialsPage },
-      { path: "account", Component: AccountPage },
+      {
+        index: true,
+        lazy: async () => {
+          const { DashboardPage } = await import("../pages/DashboardPage");
+          return { Component: DashboardPage };
+        },
+      },
+      {
+        path: "daily-log",
+        lazy: async () => {
+          const { DailyLogPage } = await import("../pages/DailyLogPage");
+          return { Component: DailyLogPage };
+        },
+      },
+      {
+        path: "payments",
+        lazy: async () => {
+          const { PaymentsPage } = await import("../pages/PaymentsPage");
+          return { Component: PaymentsPage };
+        },
+      },
+      {
+        path: "goals",
+        lazy: async () => {
+          const { GoalsPage } = await import("../pages/GoalsPage");
+          return { Component: GoalsPage };
+        },
+      },
+      {
+        path: "reports",
+        lazy: async () => {
+          const { ReportsPage } = await import("../pages/ReportsPage");
+          return { Component: ReportsPage };
+        },
+      },
+      {
+        path: "workplaces",
+        lazy: async () => {
+          const { WorkplacesPage } = await import("../pages/WorkplacesPage");
+          return { Component: WorkplacesPage };
+        },
+      },
+      {
+        path: "tutorials",
+        lazy: async () => {
+          const { TutorialsPage } = await import("../pages/TutorialsPage");
+          return { Component: TutorialsPage };
+        },
+      },
+      {
+        path: "account",
+        lazy: async () => {
+          const { AccountPage } = await import("../pages/AccountPage");
+          return { Component: AccountPage };
+        },
+      },
     ],
   },
-  { path: "*", Component: LandingPage },
+  { path: "*", redirectTo: "/" },
 ]);
