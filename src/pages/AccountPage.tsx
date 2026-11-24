@@ -328,7 +328,7 @@ export function AccountPage() {
             <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-line bg-soft/50 p-4 sm:flex-row sm:items-center">
               <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-surface bg-brand-soft text-brand-dark shadow-sm">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Your profile" className="h-full w-full object-cover" />
+                  <img src={avatarUrl} alt="Your profile" onError={() => setAvatarUrl("")} className="h-full w-full object-cover" />
                 ) : (
                   <UserRound size={30} />
                 )}
