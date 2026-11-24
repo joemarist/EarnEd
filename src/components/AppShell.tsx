@@ -56,8 +56,17 @@ export function AppShell() {
   const [userFirstName, setUserFirstName] = useState("User");
   const [userAvatar, setUserAvatar] = useState("");
   const [clockTime, setClockTime] = useState(() => new Date());
+  const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
   const location = useLocation();
   const currentDate = clockTime;
+  const safeTimezone = (() => {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+      return timezone;
+    } catch {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    }
+  })();
 
   useEffect(() => {
     const timer = window.setInterval(() => setClockTime(new Date()), 1000);
@@ -67,7 +76,12 @@ export function AppShell() {
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
-  const currentHour = currentDate.getHours();
+
+  const currentHour = Number(new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hourCycle: "h23",
+    timeZone: safeTimezone,
+  }).format(currentDate));
 
   const greeting =
     currentHour < 12
@@ -80,6 +94,7 @@ export function AppShell() {
     weekday: "long",
     month: "long",
     day: "numeric",
+    timeZone: safeTimezone,
   });
   
   
@@ -95,6 +110,7 @@ export function AppShell() {
 
       setUserFirstName(fullName.split(" ")[0] || "User");
       setUserAvatar(data.session?.user.user_metadata?.avatar_url || data.session?.user.user_metadata?.picture || "");
+      setTimezone(data.session?.user.user_metadata?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
       setSessionChecked(true);
     }
 
@@ -111,6 +127,7 @@ export function AppShell() {
 
         setUserFirstName(fullName.split(" ")[0] || "User");
         setUserAvatar(session?.user.user_metadata?.avatar_url || session?.user.user_metadata?.picture || "");
+        setTimezone(session?.user.user_metadata?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
         setSessionChecked(true);
       }
     );
@@ -204,14 +221,15 @@ export function AppShell() {
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div
               className="rounded-xl border border-line bg-surface px-2.5 py-2 text-xs font-bold tabular-nums text-ink shadow-sm sm:px-3 sm:text-sm"
-              aria-label={currentDate.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true })}
-              title="Your local time"
+              aria-label={currentDate.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true, timeZone: safeTimezone })}
+              title={"Your time · " + safeTimezone}
             >
               {currentDate.toLocaleTimeString(undefined, {
                 hour: "numeric",
                 minute: "2-digit",
                 second: "2-digit",
                 hour12: true,
+                timeZone: safeTimezone,
               })}
             </div>
             <ThemeButton />
