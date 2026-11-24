@@ -38,6 +38,25 @@ export function AccountPage() {
   const [share, setShare] = useState(false);
   const [imported, setImported] = useState("");
   const [saved, setSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    setDeleteError("");
+  
+    const { error } = await supabase.functions.invoke("delete-account");
+  
+    if (error) {
+      setDeleteError(error.message || "Unable to delete your account.");
+      setDeleting(false);
+      return;
+    }
+  
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  }
   function exportAll() {
     downloadText(
       "earned-data-export.json",
@@ -242,16 +261,78 @@ export function AccountPage() {
               <div>
                 <h2 className="font-bold">Delete account</h2>
                 <p className="text-xs text-muted">
-                  Your data is soft-deleted before permanent removal.
+                  Your account and associated daily logs will be permanently deleted. This action cannot be undone.
                 </p>
               </div>
             </div>
-            <Button variant="danger" className="mt-5">
+            <Button
+              variant="danger"
+              className="mt-5"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
               Request account deletion
             </Button>
           </Card>
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-xl">
+            <div className="flex items-center gap-3">
+              <Trash2 className="text-red-600" size={24} />
+              <h2 className="text-lg font-bold">Delete your account?</h2>
+            </div>
+
+            <p className="mt-4 text-sm text-muted">
+              This action is permanent. Your account and associated daily logs
+              will be deleted, and you will no longer be able to access them.
+            </p>
+
+            <p className="mt-4 text-sm font-semibold">
+              Type DELETE below to confirm.
+            </p>
+
+            <Input
+              className="mt-2"
+              value={deleteConfirmationText}
+              onChange={(event) =>
+                setDeleteConfirmationText(event.target.value)
+              }
+              placeholder="Type DELETE"
+              disabled={deleting}
+            />
+
+            {deleteError && (
+              <p className="mt-3 text-sm text-red-600">
+                {deleteError}
+              </p>
+            )}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                variant="secondary"
+                disabled={deleting}
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteConfirmationText("");
+                  setDeleteError("");
+                }}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                variant="danger"
+                disabled={deleting || deleteConfirmationText !== "DELETE"}
+                onClick={handleDeleteAccount}
+              >
+                {deleting ? "Deleting..." : "Permanently delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mt-5 flex items-center justify-center gap-5 text-xs text-muted">
         <span className="flex items-center gap-1.5">
           <ShieldCheck size={14} /> Private by default

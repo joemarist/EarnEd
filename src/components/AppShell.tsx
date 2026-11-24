@@ -55,6 +55,21 @@ export function AppShell() {
   const [hasSession, setHasSession] = useState(false);
   const [userFirstName, setUserFirstName] = useState("User");
   const location = useLocation();
+  const currentDate = new Date();
+  const currentHour = currentDate.getHours();
+
+  const greeting =
+    currentHour < 12
+      ? "Good morning"
+      : currentHour < 18
+        ? "Good afternoon"
+        : "Good evening";
+
+  const formattedDate = currentDate.toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
   
   
   useEffect(() => {
@@ -178,8 +193,10 @@ export function AppShell() {
               <Menu size={20} />
             </Button>
             <div className="hidden sm:block">
-              <p className="text-sm font-semibold">Good morning, Mia</p>
-              <p className="text-xs text-muted">Tuesday, May 13</p>
+              <p className="text-sm font-semibold">
+                {greeting}, {userFirstName}
+              </p>
+              <p className="text-xs text-muted">{formattedDate}</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
