@@ -151,6 +151,24 @@ const articles: Resource[] = [
 
 const videos: TutorialVideo[] = [
   {
+    id: "vHdclsdkp28",
+    title: "Self-introduction video for ESL teaching",
+    creator: "Learn with Leri",
+    description:
+      "A Filipino ESL teacher shares an example of an online-teacher self-introduction. Use it to study your delivery and structure, then create an introduction in your own words.",
+    duration: "ESL application preparation",
+    category: "Philippines",
+  },
+  {
+    id: "H3lGHUoWcGc",
+    title: "Who's vs. whose: a practical English lesson",
+    creator: "Pinay English Teacher · Myra Caguete",
+    description:
+      "A Filipino ESL trainer explains a common grammar point. This is useful for strengthening the English knowledge you may need to explain clearly to learners.",
+    duration: "Grammar lesson",
+    category: "Philippines",
+  },
+  {
     id: "tOpkAPuQXEs",
     title: "How to teach your first online class",
     creator: "ESL Teacher 365",
