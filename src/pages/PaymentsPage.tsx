@@ -680,6 +680,9 @@ export function PaymentsPage() {
                   Payment method (optional)
                   <Select className="mt-2 w-full" value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
                     <option value="">Not specified</option>
+                    <option value="GCash">GCash</option>
+                    <option value="MariBank">MariBank</option>
+                    <option value="E-wallet">E-wallet</option>
                     <option value="Bank transfer">Bank transfer</option>
                     <option value="PayPal">PayPal</option>
                     <option value="Wise">Wise</option>
