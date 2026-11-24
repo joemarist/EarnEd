@@ -1,6 +1,9 @@
 -- Reinstall and strengthen the database-level payment guard.
 -- This is the final safeguard even if two browser sessions submit at nearly the same time.
 
+create index if not exists workplaces_user_id_idx
+  on public.workplaces (user_id);
+
 create index if not exists daily_logs_user_workplace_date_idx
   on public.daily_logs (user_id, workplace_id, log_date);
 
