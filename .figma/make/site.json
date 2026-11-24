@@ -1,10 +1,11 @@
 {
-  "description": "Helps online ESL tutors track classes, earnings, payments, workplaces, and income goals in one place, with clear insights into what they’ve earned and what’s still owed.",
+  "description": "EarnEd is a free income tracker for ESL tutors. Organize teaching workplaces, class logs, payments, goals, and income reports in one place.",
   "robots": {
-    "index": false
+    "index": true
   },
   "accessibility": {
     "addBypassLinks": false,
     "ignoreReducedMotion": false
-  }
+  },
+  "title": "EarnEd | ESL Income Tracker"
 }
