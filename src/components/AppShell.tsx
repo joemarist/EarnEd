@@ -220,11 +220,11 @@ export function AppShell() {
           </div>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div
-              className="rounded-xl border border-line bg-surface px-2.5 py-2 text-xs font-bold tabular-nums text-ink shadow-sm sm:px-3 sm:text-sm"
-              aria-label={currentDate.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true, timeZone: safeTimezone })}
+              className="inline-flex h-10 w-[122px] shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-line bg-surface px-2 text-xs font-bold tabular-nums tracking-tight text-ink shadow-sm sm:w-[132px] sm:text-sm"
+              aria-label={currentDate.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true, timeZone: safeTimezone })}
               title={"Your time · " + safeTimezone}
             >
-              {currentDate.toLocaleTimeString(undefined, {
+              {currentDate.toLocaleTimeString("en-PH", {
                 hour: "numeric",
                 minute: "2-digit",
                 second: "2-digit",
