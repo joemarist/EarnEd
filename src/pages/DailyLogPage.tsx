@@ -542,13 +542,13 @@ export function DailyLogPage() {
         <div className="flex items-center rounded-xl border border-line bg-surface p-1">
           <button
             onClick={() => setView("calendar")}
-            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold ${view === "calendar" ? "bg-brand text-white" : "text-muted"}`}
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold ${view === "calendar" ? "bg-brand-dark text-white dark:bg-brand dark:text-[#14200f]" : "text-muted"}`}
           >
             <CalendarDays size={15} /> Calendar
           </button>
           <button
             onClick={() => setView("list")}
-            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold ${view === "list" ? "bg-brand text-white" : "text-muted"}`}
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold ${view === "list" ? "bg-brand-dark text-white dark:bg-brand dark:text-[#14200f]" : "text-muted"}`}
           >
             <List size={15} /> List
           </button>
@@ -612,7 +612,7 @@ export function DailyLogPage() {
                   }}
                   className="relative min-h-[76px] min-w-0 overflow-hidden border-b border-r border-line p-1 text-left transition hover:bg-brand-soft/40 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand sm:min-h-28 sm:p-2 lg:min-h-32"
                 >
-                  <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold sm:h-7 sm:w-7 sm:text-xs ${isToday ? "bg-brand text-white" : "text-ink"}`}>
+                  <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold sm:h-7 sm:w-7 sm:text-xs ${isToday ? "bg-brand-dark text-white dark:bg-brand dark:text-[#14200f]" : "text-ink"}`}>
                     {day}
                   </span>
                   {dayLogs.length > 0 && (
@@ -840,7 +840,7 @@ export function DailyLogPage() {
                       type="button"
                       onClick={() => saveEditedClasses(group)}
                       disabled={saving}
-                      className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
+                      className="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-[#14200f] hover:opacity-90 disabled:opacity-50"
                     >
                       {saving ? "Saving..." : "Save"}
                     </button>
@@ -894,7 +894,7 @@ export function DailyLogPage() {
                   setViewingDayLogs(null);
                   setAdding(true);
                 }}
-                className="flex-1 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+                className="flex-1 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-[#14200f] hover:opacity-90"
               >
                 + Add Classes
               </button>
