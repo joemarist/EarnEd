@@ -524,11 +524,11 @@ export function DailyLogPage() {
 
       {view === "calendar" ? (
         <Card className="overflow-hidden">
-          {workplaces.length > 0 && (
+          {allWorkplaces.length > 0 && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-3 py-3 sm:px-4">
               <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Workplaces</span>
-              {workplaces.map((workplace) => {
-                const color = workplaceColor(workplace.name);
+              {allWorkplaces.map((workplace) => {
+                const color = colorForWorkplace(workplace.name);
                 return (
                   <span key={workplace.id} className="inline-flex min-w-0 items-center gap-2 text-xs text-muted">
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${color.dot}`} />
