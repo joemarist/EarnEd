@@ -364,6 +364,7 @@ type PaydayType =
   | "day_of_month"
   | "days_after_cutoff"
   | "no_fixed_date";
+  | "legacy";
 
 function HelpTip({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
@@ -414,8 +415,16 @@ function WorkplaceModal({
   const [cutoffRule, setCutoffRule] = useState(
     item?.cutoff_rule ?? "End of month",
   );
+  const hasLegacyPayday =
+    Boolean(item?.payday) &&
+    item?.payday !== "No fixed payday" &&
+    item?.payday_type === "no_fixed_date" &&
+    item?.payday_day_of_week == null &&
+    item?.payday_day_of_month == null &&
+    item?.payday_offset_days == null;
+
   const [paydayType, setPaydayType] = useState<PaydayType>(
-    item?.payday_type ?? "no_fixed_date",
+    hasLegacyPayday ? "legacy" : item?.payday_type ?? "no_fixed_date",
   );
   const [paydayWeekday, setPaydayWeekday] = useState(
     String(item?.payday_day_of_week ?? 5),
@@ -436,6 +445,9 @@ function WorkplaceModal({
   )?.label ?? "Sunday";
 
   function getPaydayDescription() {
+    if (paydayType === "legacy") {
+      return item?.payday ?? "Existing payday arrangement";
+    }
     if (paydayType === "day_of_week") {
       const day = weekdays.find(
         (option) => option.value === Number(paydayWeekday),
@@ -507,7 +519,7 @@ function WorkplaceModal({
         payday: getPaydayDescription(),
         cutoff_rule: getCutoffDescription(),
         cutoff_day_of_week: isWeeklySchedule ? Number(cutoffDay) : null,
-        payday_type: paydayType,
+        payday_type: paydayType === "legacy" ? "no_fixed_date" : paydayType,
         payday_day_of_week:
           paydayType === "day_of_week" ? Number(paydayWeekday) : null,
         payday_day_of_month:
@@ -655,6 +667,9 @@ function WorkplaceModal({
                   setPaydayType(event.target.value as PaydayType)
                 }
               >
+                {hasLegacyPayday && (
+                  <option value="legacy">Keep existing: {item?.payday}</option>
+                )}
                 <option value="day_of_week">A specific weekday</option>
                 <option value="day_of_month">A date of each month</option>
                 <option value="days_after_cutoff">A number of days after cut-off</option>
