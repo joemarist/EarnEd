@@ -411,7 +411,7 @@ function WorkplaceModal({
   ) => Promise<string | null>;
 }) {
   const [name, setName] = useState(item?.name ?? "");
-  const [currency, setCurrency] = useState(item?.currency ?? "USD");
+  const [currency, setCurrency] = useState(item?.currency ?? "PHP");
   const [rate, setRate] = useState(String(item?.rate ?? 13));
   const [rateEffective, setRateEffective] = useState(
     item?.rate_effective ?? today,
