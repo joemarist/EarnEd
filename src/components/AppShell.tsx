@@ -133,19 +133,7 @@ export function AppShell() {
             <X size={18} />
           </Button>
         </div>
-        <div className="mx-2 my-5 rounded-xl bg-brand-soft p-3">
-          <p className="text-xs font-bold uppercase tracking-wider text-brand-dark dark:text-brand">
-            May income
-          </p>
-          <div className="mt-1 flex items-end justify-between">
-            <p className="text-xl font-bold">$2,650</p>
-            <p className="text-xs text-muted">82% of goal</p>
-          </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/80 dark:bg-black/20">
-            <div className="h-full w-[82%] rounded-full bg-brand" />
-          </div>
-        </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto">
+        <nav className="mt-5 flex-1 space-y-1 overflow-y-auto">
           {primaryNav.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
