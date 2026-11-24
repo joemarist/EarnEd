@@ -78,9 +78,17 @@ export function WorkplacesPage() {
     setLoading(true);
     setPageError("");
     try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        setItems([]);
+        setPageError("Please sign in to view your workplaces.");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("workplaces")
         .select("*")
+        .eq("user_id", userData.user.id)
         .order("created_at", { ascending: true });
       if (error) {
         setPageError(error.message);
@@ -577,6 +585,12 @@ function WorkplaceModal({
                 <option value="USD">USD</option>
                 <option value="PHP">PHP</option>
                 <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="CAD">CAD</option>
+                <option value="AUD">AUD</option>
+                <option value="SGD">SGD</option>
+                <option value="JPY">JPY</option>
+                <option value="INR">INR</option>
               </Select>
             </label>
 
