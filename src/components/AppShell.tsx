@@ -49,16 +49,35 @@ function ThemeButton() {
   );
 }
 
+function HeaderGreeting({ timezone, firstName }: { timezone: string; firstName: string }) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const hour = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: timezone }).format(now));
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const formattedDate = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", timeZone: timezone });
+  return <div className="hidden sm:block"><p className="text-sm font-semibold">{greeting}, {firstName}</p><p className="text-xs text-muted">{formattedDate}</p></div>;
+}
+function LiveClock({ timezone }: { timezone: string }) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const time = now.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true, timeZone: timezone });
+  return <div className="inline-flex h-10 w-[122px] shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-line bg-surface px-2 text-xs font-bold tabular-nums tracking-tight text-ink shadow-sm sm:w-[132px] sm:text-sm" aria-label={time} title={"Your time · " + timezone}>{time}</div>;
+}
+
 export function AppShell() {
   const [open, setOpen] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [userFirstName, setUserFirstName] = useState("User");
   const [userAvatar, setUserAvatar] = useState("");
-  const [clockTime, setClockTime] = useState(() => new Date());
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
   const location = useLocation();
-  const currentDate = clockTime;
   const safeTimezone = (() => {
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: timezone });
@@ -69,35 +88,9 @@ export function AppShell() {
   })();
 
   useEffect(() => {
-    const timer = window.setInterval(() => setClockTime(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
 
-  const currentHour = Number(new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    hourCycle: "h23",
-    timeZone: safeTimezone,
-  }).format(currentDate));
-
-  const greeting =
-    currentHour < 12
-      ? "Good morning"
-      : currentHour < 18
-        ? "Good afternoon"
-        : "Good evening";
-
-  const formattedDate = currentDate.toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    timeZone: safeTimezone,
-  });
-  
-  
   useEffect(() => {
     async function checkSession() {
       const { data } = await supabase.auth.getSession();
@@ -211,27 +204,10 @@ export function AppShell() {
             >
               <Menu size={20} />
             </Button>
-            <div className="hidden sm:block">
-              <p className="text-sm font-semibold">
-                {greeting}, {userFirstName}
-              </p>
-              <p className="text-xs text-muted">{formattedDate}</p>
-            </div>
+            <HeaderGreeting timezone={safeTimezone} firstName={userFirstName} />
           </div>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <div
-              className="inline-flex h-10 w-[122px] shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-line bg-surface px-2 text-xs font-bold tabular-nums tracking-tight text-ink shadow-sm sm:w-[132px] sm:text-sm"
-              aria-label={currentDate.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true, timeZone: safeTimezone })}
-              title={"Your time · " + safeTimezone}
-            >
-              {currentDate.toLocaleTimeString("en-PH", {
-                hour: "numeric",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: true,
-                timeZone: safeTimezone,
-              })}
-            </div>
+            <LiveClock timezone={safeTimezone} />
             <ThemeButton />
             <NavLink
               to="/app/account"
