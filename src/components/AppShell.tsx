@@ -231,9 +231,6 @@ export function AppShell() {
             <HeaderGreeting timezone={safeTimezone} firstName={userFirstName} />
           </div>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <Button variant="ghost" className="h-10 w-10 shrink-0 border border-line bg-surface px-0 shadow-sm hover:bg-soft" onClick={() => setShowSupport(true)} aria-label="Support EarnEd" title="Support EarnEd (optional)">
-              <HeartHandshake size={19} />
-            </Button>
             <LiveClock timezone={safeTimezone} />
             <ThemeButton />
             <NavLink
