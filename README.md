@@ -56,7 +56,7 @@ The application expects user-owned records in these tables:
 
 The `daily_logs` records are linked to workplaces through `workplace_id`; legacy records can still be matched by workplace name. Payment reconciliation uses saved Daily Log income and a database trigger to guard against overpayments and overlapping payment ranges.
 
-SQL files currently tracked in `supabase/migrations/` cover the goals table and payment safeguards/indexes. The original base-table setup for `workplaces`, `daily_logs`, and `payments` was configured separately in the Supabase project and is not yet fully represented as a clean, from-scratch migration set in this repository. Before setting up a new Supabase project, that base schema and its Row Level Security policies must also be recreated.
+SQL files currently tracked in `supabase/migrations/` cover the goals table, payment safeguards/indexes, and the public-read `avatars` Storage bucket. Run `20261124_create_avatar_storage.sql` in the Supabase SQL Editor before using custom profile picture uploads. Each authenticated user can write only to their own UUID folder; profile image URLs are public so the app header can display them. The original base-table setup for `workplaces`, `daily_logs`, and `payments` was configured separately in the Supabase project and is not yet fully represented as a clean, from-scratch migration set in this repository. Before setting up a new Supabase project, that base schema and its Row Level Security policies must also be recreated.
 
 Enable Row Level Security on every user-owned table and ensure policies restrict reads and writes to rows where `auth.uid() = user_id`. The client uses only the public/anon key; database policies are an essential part of the security boundary.
 
@@ -78,7 +78,7 @@ Before deploying a new release:
 2. Confirm all required tables, indexes, triggers, and Row Level Security policies exist.
 3. Confirm the `delete-account` Edge Function is deployed if account deletion is enabled.
 4. Run `npm run build` and resolve any TypeScript or Vite build errors.
-5. Test sign-in, workplace creation, class logging, partial/full payments, overlapping payment protection, goals, reports, exports, account settings, and both light and dark themes.
+5. Test sign-in (including Google), profile picture display and upload, workplace creation, class logging, partial/full payments, overlapping payment protection, goals, reports, exports, account settings, and both light and dark themes.
 6. Test the app at mobile and desktop widths, including the installed PWA if it will be distributed that way.
 
 ## Project structure
