@@ -200,21 +200,21 @@ export function LandingPage() {
                   <div className="mt-5 grid grid-cols-2 gap-3">
                     <div className="rounded-xl border border-line bg-surface p-4">
                       <p className="text-xs text-muted">Total earned</p>
-                      <p className="mt-1 text-2xl font-bold">$2,650</p>
+                      <p className="mt-1 text-2xl font-bold">₱26,500</p>
                       <p className="mt-1 text-xs font-semibold text-brand-dark">
                         ↑ 12.4% this month
                       </p>
                     </div>
                     <div className="rounded-xl border border-line bg-surface p-4">
                       <p className="text-xs text-muted">Still owed</p>
-                      <p className="mt-1 text-2xl font-bold">$470</p>
+                      <p className="mt-1 text-2xl font-bold">₱4,700</p>
                       <p className="mt-1 text-xs font-semibold text-amber-600">2 open payments</p>
                     </div>
                   </div>
                   <div className="mt-3 rounded-xl border border-line bg-surface p-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold">Monthly progress</p>
-                      <p className="text-xs text-muted">$2,650 / $3,200</p>
+                      <p className="text-xs text-muted">₱26,500 / ₱32,000</p>
                     </div>
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-soft">
                       <div className="h-full w-[82%] rounded-full bg-brand" />
@@ -330,66 +330,54 @@ export function LandingPage() {
         >
           <div className="relative mx-auto w-full max-w-md [perspective:1400px]">
             <div className="absolute -inset-4 rotate-3 rounded-[2rem] bg-brand-soft dark:bg-brand/10" />
-            <div className="relative min-h-[520px]">
+            <div className="relative h-[500px] sm:h-[540px]">
               <div
                 aria-hidden={!profileUnwrapped}
                 inert={!profileUnwrapped}
-                className="absolute inset-0 overflow-y-auto rounded-[1.75rem] border border-line bg-surface p-7 shadow-xl sm:p-9"
+                className="absolute inset-0 flex flex-col overflow-hidden rounded-[1.75rem] border border-line bg-surface p-5 shadow-xl sm:p-7"
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand text-2xl font-extrabold tracking-tight text-[#18352e]">
-                  JN
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-brand-dark dark:text-brand">The person behind EarnEd</p>
+                    <h3 className="mt-2 font-display text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">Joemar Niño Abellana</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted">ESL Tutor · IT Student · Web Developer</p>
+                  </div>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand text-lg font-extrabold text-[#18352e]">JN</div>
                 </div>
-                <p className="mt-5 text-xs font-extrabold uppercase tracking-[.18em] text-brand-dark dark:text-brand">
-                  A little more about me
-                </p>
-                <h3 className="mt-2 font-display text-2xl font-extrabold tracking-tight">
-                  Joemar Niño Abellana
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-muted">
-                  ESL Tutor · IT Student · Web Developer
-                </p>
-                <div className="my-5 h-px bg-line" />
-                <div className="grid gap-4">
-                  <div>
-                    <p className="text-sm font-bold">Education</p>
-                    <p className="mt-1 text-xs leading-5 text-muted">BS Information Technology · University of Southeastern Philippines · 2023–2027</p>
+                <div className="my-4 h-px shrink-0 bg-line" />
+                <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-x-4 gap-y-4">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold">Education</p>
+                    <p className="mt-1 text-[11px] leading-[1.55] text-muted">BS Information Technology<br />University of Southeastern Philippines<br />2023–2027</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">Development experience</p>
-                    <p className="mt-1 text-xs leading-5 text-muted">Backend and full-stack work with Laravel, PHP, MySQL, React, TypeScript, and database-driven applications.</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold">Based in</p>
+                    <p className="mt-1 text-[11px] leading-[1.55] text-muted">Tagum City, Philippines<br />Building practical tools for everyday work</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">Selected projects</p>
-                    <p className="mt-1 text-xs leading-5 text-muted">Backend contributions to Balay Alumni Management System; Project Manager and Full-Stack Developer for MedStudy Space; Database Administrator for Sodarchives.</p>
+                  <div className="col-span-2 min-w-0">
+                    <p className="text-xs font-bold">Development experience</p>
+                    <p className="mt-1 text-[11px] leading-[1.55] text-muted">Backend and full-stack development with Laravel, PHP, MySQL, React, TypeScript, and database-driven applications.</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">Based in Tagum, Philippines</p>
-                    <p className="mt-1 text-xs leading-5 text-muted">Building practical tools shaped by real teaching and project experience.</p>
+                  <div className="col-span-2 min-w-0">
+                    <p className="text-xs font-bold">Selected projects</p>
+                    <p className="mt-1 text-[11px] leading-[1.55] text-muted">Balay Alumni Management System · MedStudy Space · Sodarchives</p>
                   </div>
                 </div>
-                <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold">
-                  <a href="https://joemarportfolio.netlify.app/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">
-                    Portfolio <ArrowRight size={14} className="inline" />
-                  </a>
-                  <a href="https://www.linkedin.com/in/joemar-abellana/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">
-                    LinkedIn <ArrowRight size={14} className="inline" />
-                  </a>
+                <div className="mt-3 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+                  <div className="flex gap-4 text-xs font-semibold">
+                    <a href="https://joemarportfolio.netlify.app/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">Portfolio <ArrowRight size={12} className="inline" /></a>
+                    <a href="https://www.linkedin.com/in/joemar-abellana/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">LinkedIn <ArrowRight size={12} className="inline" /></a>
+                  </div>
+                  <button type="button" onClick={() => setProfileUnwrapped(false)} aria-pressed={!profileUnwrapped} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-line bg-soft px-3 text-xs font-semibold text-ink transition hover:bg-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
+                    <ChevronDown size={14} className="rotate-90" /> Back to photo
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setProfileUnwrapped(false)}
-                  aria-pressed={!profileUnwrapped}
-                  className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-line bg-soft px-5 text-sm font-semibold text-ink transition hover:bg-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-                >
-                  <ChevronDown size={16} className="rotate-90" />
-                  Back to my photo
-                </button>
               </div>
 
               <div
                 aria-hidden={profileUnwrapped}
                 inert={profileUnwrapped}
-                className="relative z-10 min-h-[520px] overflow-hidden rounded-[1.75rem] border border-line bg-surface shadow-xl transition-transform duration-700 ease-in-out motion-reduce:transition-none"
+                className="relative z-10 h-full overflow-hidden rounded-[1.75rem] border border-line bg-surface shadow-xl transition-transform duration-700 ease-in-out motion-reduce:transition-none"
                 style={{
                   transform: profileUnwrapped ? "rotateY(-105deg)" : "rotateY(0deg)",
                   transformOrigin: "left center",
@@ -401,7 +389,7 @@ export function LandingPage() {
                 <img
                   src="/developer-placeholder.png"
                   alt="Portrait of Joemar Niño Abellana"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#10251d]/90 via-[#10251d]/10 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-7 text-white sm:p-9">
