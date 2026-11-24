@@ -10,6 +10,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   Legend,
   ResponsiveContainer,
@@ -306,6 +308,21 @@ export function ReportsPage() {
       .sort((a, b) => b.earned - a.earned);
   }, [filteredLogs, workplaceById, workplaces]);
 
+  const workplaceIncomeGroups = useMemo(() => {
+    const groups = new Map<string, Array<{ workplace: string; earned: number }>>();
+    for (const row of workplaceRows) {
+      const rows = groups.get(row.currency) ?? [];
+      rows.push({ workplace: row.workplace, earned: row.earned });
+      groups.set(row.currency, rows);
+    }
+    return Array.from(groups.entries())
+      .map(([currency, data]) => ({
+        currency,
+        data: data.sort((a, b) => b.earned - a.earned),
+      }))
+      .sort((a, b) => a.currency.localeCompare(b.currency));
+  }, [workplaceRows]);
+
   const csvRows = useMemo(() => {
     const rows = new Map<string, ReportRow>();
     const ensureRow = (month: string, workplace: string, currency: string) => {
@@ -526,6 +543,49 @@ export function ReportsPage() {
                     <Area type="monotone" dataKey="earned" name="Earned" stroke="#76BE3F" strokeWidth={2.5} fill={`url(#earnedFill-${summary.currency})`} />
                     <Area type="monotone" dataKey="received" name="Received" stroke="#2F7D6D" strokeWidth={2.5} fill={`url(#receivedFill-${summary.currency})`} />
                   </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          ))}
+
+          {workplaceIncomeGroups.map((group) => (
+            <Card key={group.currency} className="mb-5 p-5">
+              <div>
+                <h2 className="font-bold">Income by workplace · {group.currency}</h2>
+                <p className="text-xs text-muted">Total class income within the selected date range and workplace filter</p>
+              </div>
+              <div className="mt-5 h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={group.data} margin={{ top: 8, right: 12, left: 4, bottom: 42 }}>
+                    <CartesianGrid vertical={false} stroke="var(--line)" />
+                    <XAxis
+                      dataKey="workplace"
+                      axisLine={false}
+                      tickLine={false}
+                      interval={0}
+                      angle={-20}
+                      textAnchor="end"
+                      height={58}
+                      tick={{ fill: "var(--muted)", fontSize: 11 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "var(--muted)", fontSize: 11 }}
+                      width={56}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--surface)",
+                        border: "1px solid var(--line)",
+                        borderRadius: "12px",
+                        color: "var(--ink)",
+                      }}
+                      labelStyle={{ color: "var(--ink)" }}
+                      formatter={(value) => formatMoney(Number(value), group.currency)}
+                    />
+                    <Bar dataKey="earned" name="Total earned" fill="#76BE3F" radius={[5, 5, 0, 0]} />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </Card>
