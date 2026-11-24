@@ -1,5 +1,5 @@
 import { AlertCircle, CalendarCheck, ChevronDown, ChevronRight, Download, Plus, RefreshCw, Search, TrendingUp } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Input, PageHeader, Select } from "../components/ui";
 import { supabase } from "../lib/supabase";
 import { downloadText } from "../lib/utils";
@@ -479,7 +479,7 @@ export function PaymentsPage() {
               {workplaces.map((item) => <option key={item.id} value={item.id}>{item.name}{item.archived ? " (archived)" : ""}</option>)}
             </Select>
             <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="w-full">
-              <option value="all">All statuses</option><option value="paid">Paid</option><option value="partial">Partial</option><option value="unpaid">Unpaid</option>
+              <option value="all">All statuses</option><option value="paid">Paid</option><option value="partial">Partial</option>
             </Select>
           </div>
         </div>
@@ -487,9 +487,9 @@ export function PaymentsPage() {
         {filteredPeriods.length === 0 ? (
           <div className="p-8 text-center">
             <CalendarCheck className="mx-auto text-muted" size={28} />
-            <h3 className="mt-3 font-semibold">No payment periods recorded yet</h3>
+            <h3 className="mt-3 font-semibold">{periodSummaries.length === 0 ? "No payment periods recorded yet" : "No matching payment periods"}</h3>
             <p className="mx-auto mt-1 max-w-lg text-sm text-muted">
-              Your earned income is already calculated from Daily Logs above. Record the first payment and its pay-period dates to start reconciling what was expected against what arrived.
+              {periodSummaries.length === 0 ? "Your earned income is already calculated from Daily Logs above. Record the first payment and its pay-period dates to start reconciling what was expected against what arrived." : "Try changing your search, workplace, or status filters."}
             </p>
             {workplaces.length > 0 && (
               <Button className="mt-4" onClick={openRecordModal}><Plus size={16} /> Record your first payment</Button>
@@ -511,7 +511,8 @@ export function PaymentsPage() {
               </thead>
               <tbody className="divide-y divide-line">
                 {paginatedPeriods.map((item) => (
-                  <tr key={item.key} className="hover:bg-soft/60">
+                  <Fragment key={item.key}>
+                  <tr className="hover:bg-soft/60">
                     <td className="px-5 py-4"><button type="button" className="inline-flex items-center gap-2 text-left font-semibold hover:text-brand" onClick={() => setExpandedPeriods((previous) => previous.includes(item.key) ? previous.filter((key) => key !== item.key) : [...previous, item.key])}>{expandedPeriods.includes(item.key) ? <ChevronDown size={15} /> : <ChevronRight size={15} />}{item.workplace}</button></td>
                     <td className="px-4 py-4 text-muted">{displayDate(item.start)} – {displayDate(item.end)}</td>
                     <td className="px-4 py-4">{formatMoney(item.expected, item.currency)}</td>
