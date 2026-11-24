@@ -204,13 +204,14 @@ export function AppShell() {
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div
               className="rounded-xl border border-line bg-surface px-2.5 py-2 text-xs font-bold tabular-nums text-ink shadow-sm sm:px-3 sm:text-sm"
-              aria-label={currentDate.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" })}
+              aria-label={currentDate.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true })}
               title="Your local time"
             >
               {currentDate.toLocaleTimeString(undefined, {
                 hour: "numeric",
                 minute: "2-digit",
                 second: "2-digit",
+                hour12: true,
               })}
             </div>
             <ThemeButton />
@@ -221,7 +222,7 @@ export function AppShell() {
             >
               <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-line bg-brand-soft text-brand-dark">
                 {userAvatar ? (
-                  <img src={userAvatar} alt="" className="h-full w-full object-cover" />
+                  <img src={userAvatar} alt="" onError={() => setUserAvatar("")} className="h-full w-full object-cover" />
                 ) : (
                   <UserRound size={18} />
                 )}
