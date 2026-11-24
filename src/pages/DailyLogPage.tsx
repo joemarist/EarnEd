@@ -20,6 +20,25 @@ type Workplace = {
   archived: boolean;
 };
 
+const workplaceColors = [
+  { dot: "bg-sky-500", chip: "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900 dark:bg-sky-950/60 dark:text-sky-200" },
+  { dot: "bg-violet-500", chip: "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-900 dark:bg-violet-950/60 dark:text-violet-200" },
+  { dot: "bg-amber-500", chip: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/60 dark:text-amber-200" },
+  { dot: "bg-rose-500", chip: "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-200" },
+  { dot: "bg-cyan-500", chip: "border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-900 dark:bg-cyan-950/60 dark:text-cyan-200" },
+  { dot: "bg-orange-500", chip: "border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-900 dark:bg-orange-950/60 dark:text-orange-200" },
+  { dot: "bg-indigo-500", chip: "border-indigo-200 bg-indigo-50 text-indigo-800 dark:border-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-200" },
+  { dot: "bg-emerald-500", chip: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200" },
+];
+
+function workplaceColor(name: string) {
+  let hash = 0;
+  for (let index = 0; index < name.length; index += 1) {
+    hash = (hash * 31 + name.charCodeAt(index)) | 0;
+  }
+  return workplaceColors[Math.abs(hash) % workplaceColors.length];
+}
+
 function formatMoney(value: number, currency: string) {
   try {
     return new Intl.NumberFormat("en-US", {
@@ -499,35 +518,47 @@ export function DailyLogPage() {
 
       {view === "calendar" ? (
         <Card className="overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-line bg-soft text-center text-[10px] font-bold uppercase tracking-wider text-muted sm:text-xs">
+          {workplaces.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-3 py-3 sm:px-4">
+              <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Workplaces</span>
+              {workplaces.map((workplace) => {
+                const color = workplaceColor(workplace.name);
+                return (
+                  <span key={workplace.id} className="inline-flex min-w-0 items-center gap-2 text-xs text-muted">
+                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${color.dot}`} />
+                    <span className="max-w-36 truncate">{workplace.name}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          <div className="grid grid-cols-7 border-b border-line bg-soft text-center text-[9px] font-bold uppercase tracking-wider text-muted sm:text-xs">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="py-3">
-                {day}
-              </div>
+              <div key={day} className="py-2 sm:py-3">{day}</div>
             ))}
           </div>
           <div className="grid grid-cols-7">
-          {Array.from({ length: firstDayOffset }).map((_, index) => (
-            <div
-              key={`blank-${index}`}
-              className="min-h-22 border-b border-r border-line bg-soft/30 sm:min-h-29"
-            />
-          ))}
+            {Array.from({ length: firstDayOffset }).map((_, index) => (
+              <div key={`blank-start-${index}`} className="min-h-[76px] border-b border-r border-line bg-soft/30 sm:min-h-28 lg:min-h-32" />
+            ))}
             {days.map((day) => {
               const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
               const dayLogs = logsByDate[dateKey] ?? [];
-              const totalClasses = dayLogs.reduce(
-                (sum: number, log: any) => sum + (log.classes ?? 0),
-                0
-              );
+              const totalClasses = dayLogs.reduce((sum: number, log: any) => sum + (log.classes ?? 0), 0);
+              const workplaceGroups = [...new Set(dayLogs.map((log: any) => log.workplace).filter(Boolean))]
+                .map((name) => ({
+                  name,
+                  classes: dayLogs.filter((log: any) => log.workplace === name)
+                    .reduce((sum: number, log: any) => sum + (log.classes ?? 0), 0),
+                  color: workplaceColor(name),
+                }));
               const today = new Date();
-              const isToday =
-                year === today.getFullYear() &&
-                month === today.getMonth() &&
-                day === today.getDate();
+              const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
               return (
                 <button
                   key={day}
+                  type="button"
+                  aria-label={dayLogs.length > 0 ? `${dateKey}: ${totalClasses} classes at ${workplaceGroups.map((group) => group.name).join(", ")}` : `Add classes for ${dateKey}`}
                   onClick={() => {
                     if (dayLogs.length > 0) {
                       setViewingDayLogs(dayLogs);
@@ -540,33 +571,41 @@ export function DailyLogPage() {
                       setAdding(true);
                     }
                   }}
-                  className="relative min-h-22 border-b border-r border-line p-1.5 text-left transition hover:bg-brand-soft/40 sm:min-h-29 sm:p-2.5"
+                  className="relative min-h-[76px] min-w-0 overflow-hidden border-b border-r border-line p-1 text-left transition hover:bg-brand-soft/40 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand sm:min-h-28 sm:p-2 lg:min-h-32"
                 >
-                  <span
-                    className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${isToday ? "bg-brand text-white" : ""}`}
-                  >
+                  <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold sm:h-7 sm:w-7 sm:text-xs ${isToday ? "bg-brand text-white" : "text-ink"}`}>
                     {day}
                   </span>
                   {dayLogs.length > 0 && (
-                    <div className="mt-1 rounded-md border-l-3 border-brand bg-brand-soft p-1.5 text-[9px] leading-tight text-brand-dark dark:text-brand sm:text-[11px]">
-                      <p className="truncate font-semibold">
-                        {[...new Set(dayLogs.map((log: any) => log.workplace))]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
-
-                      <p className="font-bold">
+                    <div className="mt-1 min-w-0 space-y-1">
+                      <p className="text-[9px] font-bold leading-tight text-muted sm:text-[11px]">
                         {totalClasses} {totalClasses === 1 ? "class" : "classes"}
                       </p>
-
-                      <p className="mt-0.5 hidden opacity-70 sm:block">
-                        {formatIncomeSummary(dayLogs)}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-1 sm:hidden">
+                        {workplaceGroups.slice(0, 4).map((group) => (
+                          <span key={group.name} title={group.name} className={`h-2.5 w-2.5 rounded-full ${group.color.dot}`} />
+                        ))}
+                        {workplaceGroups.length > 4 && <span className="text-[9px] text-muted">+{workplaceGroups.length - 4}</span>}
+                      </div>
+                      <div className="hidden min-w-0 space-y-1 sm:block">
+                        {workplaceGroups.slice(0, 2).map((group) => (
+                          <span key={group.name} className={`flex min-w-0 items-center gap-1 rounded-md border px-1.5 py-1 text-[10px] leading-tight ${group.color.chip}`}>
+                            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${group.color.dot}`} />
+                            <span className="min-w-0 flex-1 truncate">{group.name}</span>
+                            <span className="shrink-0 font-bold">{group.classes}</span>
+                          </span>
+                        ))}
+                        {workplaceGroups.length > 2 && <p className="text-[9px] text-muted">+{workplaceGroups.length - 2} more</p>}
+                      </div>
+                      <p className="hidden truncate text-[10px] text-muted lg:block">{formatIncomeSummary(dayLogs)}</p>
                     </div>
                   )}
                 </button>
               );
             })}
+            {Array.from({ length: (7 - ((firstDayOffset + daysInMonth) % 7)) % 7 }).map((_, index) => (
+              <div key={`blank-end-${index}`} className="min-h-[76px] border-b border-r border-line bg-soft/30 sm:min-h-28 lg:min-h-32" />
+            ))}
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 p-4 text-xs text-muted">
           <span>
