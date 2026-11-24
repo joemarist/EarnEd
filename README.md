@@ -1,85 +1,112 @@
-# EarnEd — ESL Income Tracker
+# EarnEd — Free ESL Tutor Income Tracker
 
-EarnEd is a responsive income-tracking application for independent ESL tutors. It helps users organize workplaces, record classes, reconcile payments, set income goals, and review reports.
+EarnEd is a free, responsive income-tracking application for independent ESL tutors. It helps tutors organize workplaces, record classes, reconcile payments, set income goals, and understand their earnings.
 
 ## Features
 
-- **Dashboard:** current-period earnings, received payments, outstanding balances, recent class logs, and six-month trends.
+- **Dashboard:** earnings, received payments, outstanding balances, recent class logs, and six-month trends.
 - **Workplaces:** multiple workplaces, currencies, historical class rates, pay schedules, cutoff rules, and payment notes.
-- **Daily Log:** record classes by date and workplace while preserving the rate and income saved for each entry.
-- **Payments:** record full or partial payments, reconcile them against Daily Logs, and prevent overpayments and overlapping date ranges.
-- **Goals:** create personal income targets and calculate progress from matching Daily Log income.
-- **Reports:** filter by date and workplace, compare earned and received amounts by currency, and export CSV or print a PDF.
-- **Settings & Account:** update profile preferences, change password, export account data, and request account deletion.
-- **Tutorials & Tips:** remains available in the navigation; its content is intentionally reserved for a later update.
+- **Daily Logs:** calendar and paginated list views for recording classes, rates, income, and notes.
+- **Payments:** full and partial payment records, payment methods, period reconciliation, and CSV export.
+- **Goals:** personal income targets and progress calculated from matching Daily Log income.
+- **Reports:** date and workplace filters, currency-separated summaries, charts, CSV export, and print/PDF.
+- **Account:** profile settings, avatar upload, password management, data export, and account deletion.
+- **Tutorials & Tips:** curated ESL teaching articles, video tutorials, a first-class checklist, and practical lesson guidance.
+- **Voluntary support:** optional GCash donations. EarnEd remains free; donations are never required to use features.
 
 ## Technology
 
 - React 19 and TypeScript
-- Vite 8
-- Tailwind CSS 4
+- Vite 8 and Tailwind CSS 4
 - React Router 7
-- Supabase Auth and Postgres
+- Supabase Auth, Postgres, and Storage
 - Recharts and Lucide icons
-- Installable Progressive Web App (PWA)
+- Progressive Web App manifest and service worker
+
+## Requirements
+
+- Node.js 22
+- npm (the repository includes `package-lock.json`)
 
 ## Run locally
 
-Use a Node.js version supported by Vite 8.
-
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite.
-
-## Environment variables
-
-Create a `.env.local` file in the project root:
+Create `.env.local` in the project root:
 
 ```env
-VITE_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
 ```
 
-Use the URL and public/anon key from your Supabase project settings. Never put a Supabase service-role key in a `VITE_*` variable or any client-side file.
+Use the project URL and public/publishable (or legacy anon) key from Supabase Project Settings > API. These two values are intended for browser use. **Never put a Supabase service-role key or secret key in a `VITE_*` variable, source file, or public repository.**
 
-## Supabase database
+## Production build
 
-The application expects user-owned records in these tables:
+```bash
+npm ci
+npm run typecheck
+npm run build
+npm run preview
+```
 
-- `workplaces`
-- `daily_logs`
-- `payments`
-- `goals`
+The production output is `dist/`.
 
-The `daily_logs` records are linked to workplaces through `workplace_id`; legacy records can still be matched by workplace name. Payment reconciliation uses saved Daily Log income and a database trigger to guard against overpayments and overlapping payment ranges.
+## Deploy to Cloudflare Pages
 
-SQL files currently tracked in `supabase/migrations/` cover the goals table, payment safeguards/indexes, and the public-read `avatars` Storage bucket. Run `20261124_create_avatar_storage.sql` in the Supabase SQL Editor before using custom profile picture uploads. Each authenticated user can write only to their own UUID folder; profile image URLs are public so the app header can display them. The original base-table setup for `workplaces`, `daily_logs`, and `payments` was configured separately in the Supabase project and is not yet fully represented as a clean, from-scratch migration set in this repository. Before setting up a new Supabase project, that base schema and its Row Level Security policies must also be recreated.
+Create a Pages project using the GitHub integration and connect this repository.
 
-Enable Row Level Security on every user-owned table and ensure policies restrict reads and writes to rows where `auth.uid() = user_id`. The client uses only the public/anon key; database policies are an essential part of the security boundary.
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Framework preset | Vite |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Root directory | `/` (repository root) |
+| Node.js version | `22` |
 
-Account deletion calls a Supabase Edge Function named `delete-account`. Ensure that function is deployed and configured in the Supabase project before relying on the delete-account action.
+Add these environment variables in the Cloudflare Pages project under Settings > Environment variables, for both Production and Preview as appropriate:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+After the first deployment, configure Supabase Authentication > URL Configuration:
+- Set Site URL to the final HTTPS production domain.
+- Add the production URLs used by the app, including `https://YOUR-DOMAIN/**`, to Redirect URLs.
+- Keep localhost redirect URLs only for local development.
+- If Google sign-in is enabled, configure the production website origin in Google OAuth's Authorized JavaScript origins. Keep the Supabase callback URL listed in Google's Authorized redirect URIs.
+
+Cloudflare Pages supports Vite builds with `npm run build` and `dist` as the output directory. It serves Vite single-page applications with SPA fallback behavior when no top-level `404.html` is present.
+
+## Supabase production checklist
+
+The app uses the existing Supabase project; deploying the frontend does not create or migrate a database.
+
+Before opening registration to the public, verify:
+
+1. `workplaces`, `daily_logs`, `payments`, and `goals` exist and have Row Level Security enabled.
+2. The four user-owned tables have authenticated policies that restrict each operation to the signed-in user's `user_id`.
+3. The `avatars` bucket exists with the expected file size/MIME limits and per-user folder write policies.
+4. The payment validation trigger and `public.validate_payment_amount()` function exist on `public.payments`. The latest repository safeguard script is `supabase/migrations/20261124_harden_payment_period_guard.sql`. Verify the live database after applying it; do not rely on frontend validation alone.
+5. The `delete-account` Edge Function is deployed and tested.
+6. Supabase Auth leaked-password protection is enabled.
+7. Production Site URL and Redirect URLs are configured before testing email confirmation, password recovery, and Google sign-in.
+
+The original base-table setup for `workplaces`, `daily_logs`, and `payments` was configured separately in the current Supabase project and is not yet fully represented as a clean, from-scratch migration set in this repository. Do not use this repository alone to create a replacement production database.
+
+## Privacy and operational readiness
+
+EarnEd stores personal teaching and income records. Before public launch, publish a privacy notice and terms of use that explain what data is stored, why it is processed, retention/deletion practices, and how users can contact the maintainer. Confirm Supabase backup and recovery options for the chosen plan. Test account isolation with two separate accounts and verify exports and deletion end-to-end.
 
 ## Current limitations
 
-- Spreadsheet import is not available yet.
+- Spreadsheet import is not available.
 - Reminder preferences can be saved, but automatic email and push notifications are not enabled.
-- Timezone is saved as an account preference for future date and reminder features; current date calculations still use the browser's local timezone.
-- The default currency is an account preference; each workplace continues to store its own currency.
-- No automated test suite is currently configured.
-
-## Production checks
-
-Before deploying a new release:
-
-1. Confirm the production Supabase URL and public key are configured.
-2. Confirm all required tables, indexes, triggers, and Row Level Security policies exist.
-3. Confirm the `delete-account` Edge Function is deployed if account deletion is enabled.
-4. Run `npm run build` and resolve any TypeScript or Vite build errors.
-5. Test sign-in (including Google), profile picture display and upload, workplace creation, class logging, partial/full payments, overlapping payment protection, goals, reports, exports, account settings, and both light and dark themes.
-6. Test the app at mobile and desktop widths, including the installed PWA if it will be distributed that way.
+- No automated end-to-end test suite is currently configured.
+- The current deployment workflow adds a TypeScript check and production build in GitHub Actions; it does not replace browser, security, or load testing.
 
 ## Project structure
 
@@ -87,22 +114,12 @@ Before deploying a new release:
 src/
   app/                 Router and route definitions
   components/          App shell, shared UI, and branding
-  lib/                 Supabase client and utility helpers
-  pages/               Dashboard and feature pages
-  data/                Legacy mock data (not the source for live account records)
+  lib/                 Supabase client and utilities
+  pages/               Application pages
 public/
   brand/               EarnEd artwork
   manifest.webmanifest PWA metadata
   sw.js                Production service worker
 supabase/
-  migrations/          SQL migrations and payment safeguards
-```
-
-## Available scripts
-
-```bash
-npm run dev       # Start the development server
-npm run build     # Create a production build
-npm run preview   # Preview the production build
-npm run format    # Format supported source files
+  migrations/          SQL safeguards and schema migrations
 ```
