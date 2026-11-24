@@ -10,9 +10,10 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
   Legend,
   ResponsiveContainer,
   Tooltip,
@@ -552,41 +553,54 @@ export function ReportsPage() {
             <Card key={group.currency} className="mb-5 p-5">
               <div>
                 <h2 className="font-bold">Income by workplace · {group.currency}</h2>
-                <p className="text-xs text-muted">Total class income within the selected date range and workplace filter</p>
+                <p className="text-xs text-muted">Share of recorded class income by workplace for the selected filters</p>
               </div>
-              <div className="mt-5 h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={group.data} margin={{ top: 8, right: 12, left: 4, bottom: 42 }}>
-                    <CartesianGrid vertical={false} stroke="var(--line)" />
-                    <XAxis
-                      dataKey="workplace"
-                      axisLine={false}
-                      tickLine={false}
-                      interval={0}
-                      angle={-20}
-                      textAnchor="end"
-                      height={58}
-                      tick={{ fill: "var(--muted)", fontSize: 11 }}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "var(--muted)", fontSize: 11 }}
-                      width={56}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--surface)",
-                        border: "1px solid var(--line)",
-                        borderRadius: "12px",
-                        color: "var(--ink)",
-                      }}
-                      labelStyle={{ color: "var(--ink)" }}
-                      formatter={(value) => formatMoney(Number(value), group.currency)}
-                    />
-                    <Bar dataKey="earned" name="Total earned" fill="#76BE3F" radius={[5, 5, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(220px,.9fr)] lg:items-center">
+                <div className="h-64 min-w-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={group.data}
+                        dataKey="earned"
+                        nameKey="workplace"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius="52%"
+                        outerRadius="82%"
+                        paddingAngle={3}
+                        stroke="var(--surface)"
+                        strokeWidth={3}
+                        labelLine={false}
+                        label={({ percent }) => (Number(percent) * 100).toFixed(0) + "%"}
+                      >
+                        {group.data.map((entry, index) => (
+                          <Cell key={entry.workplace} fill={["#76BE3F", "#2F7D6D", "#4F83CC", "#D69E36", "#9B72CF", "#D97777"][index % 6]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ backgroundColor: "var(--surface)", border: "1px solid var(--line)", borderRadius: "12px", color: "var(--ink)" }}
+                        labelStyle={{ color: "var(--ink)" }}
+                        formatter={(value) => formatMoney(Number(value), group.currency)}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="space-y-3">
+                  {group.data.map((entry, index) => {
+                    const total = group.data.reduce((sum, item) => sum + item.earned, 0);
+                    const share = total > 0 ? (entry.earned / total) * 100 : 0;
+                    return (
+                      <div key={entry.workplace} className="flex items-center gap-3">
+                        <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: ["#76BE3F", "#2F7D6D", "#4F83CC", "#D69E36", "#9B72CF", "#D97777"][index % 6] }} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold">{entry.workplace}</p>
+                          <p className="text-xs text-muted">{share.toFixed(1)}% of this currency's income</p>
+                        </div>
+                        <p className="shrink-0 text-sm font-bold">{formatMoney(entry.earned, group.currency)}</p>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </Card>
           ))}
