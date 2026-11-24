@@ -537,7 +537,7 @@ export function PaymentsPage() {
                   {values.length > 0 ? values.map((value, index) => <p key={label + index} className="text-xl font-bold">{value}</p>) : <p className="text-2xl font-bold">—</p>}
                 </div>
               </div>
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${warning ? "bg-amber-100 text-amber-700 dark:bg-amber-950" : "bg-brand-soft text-brand-dark"}`}>
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${warning ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" : "bg-brand-soft text-brand-dark"}`}>
                 <Icon size={19} />
               </span>
             </div>
