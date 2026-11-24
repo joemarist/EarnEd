@@ -11,7 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, Button, Card, Input, PageHeader, Select } from "../components/ui";
+import { Button, Card, Input, PageHeader, Select } from "../components/ui";
 import { supabase } from "../lib/supabase";
 
 type Goal = {
@@ -301,7 +301,7 @@ export function GoalsPage() {
               <div className="p-5 sm:p-6">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <Badge status={status} />
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusClasses(status)}`}>{status}</span>
                     <h2 className="mt-3 break-words text-lg font-bold">{goal.title}</h2>
                     {goal.description && <p className="mt-1 whitespace-pre-wrap text-sm text-muted">{goal.description}</p>}
                   </div>
@@ -357,6 +357,8 @@ export function GoalsPage() {
                 </div>
                 <button type="button" className="rounded-lg px-3 py-1 text-sm text-muted hover:bg-soft" onClick={() => { setShowForm(false); setEditing(null); }} disabled={saving}>Close</button>
               </div>
+
+              {pageError && <div role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{pageError}</div>}
 
               <div className="mt-5 space-y-4">
                 <label className="block text-sm font-semibold">Goal name
