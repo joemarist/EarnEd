@@ -15,6 +15,14 @@ begin
     raise exception 'You can only record payments for your own account.';
   end if;
 
+  if new.amount is null or new.amount <= 0 then
+    raise exception 'Payment amount must be greater than zero.';
+  end if;
+
+  if new.period_start is null or new.period_end is null or new.period_end < new.period_start then
+    raise exception 'Please provide a valid pay-period date range.';
+  end if;
+
   if new.workplace_id is null then
     raise exception 'A payment must be linked to a workplace.';
   end if;
@@ -28,17 +36,32 @@ begin
     raise exception 'The selected workplace does not belong to this account.';
   end if;
 
+  -- Serialize all payment writes for this workplace, including overlapping ranges.
   perform pg_advisory_xact_lock(
     hashtext(new.user_id::text),
-    hashtext(
-      new.workplace_id::text || ':' ||
-      new.period_start::text || ':' ||
-      new.period_end::text
-    )
+    hashtext(new.workplace_id::text)
   );
 
+  -- Partial payments must continue using the same exact range.
+  -- A different overlapping range would make the same Daily Logs payable twice.
+  if exists (
+    select 1
+    from public.payments p
+    where p.user_id = new.user_id
+      and (
+        p.workplace_id = new.workplace_id
+        or (p.workplace_id is null and p.workplace_name = new.workplace_name)
+      )
+      and p.period_start <= new.period_end
+      and p.period_end >= new.period_start
+      and (p.period_start <> new.period_start or p.period_end <> new.period_end)
+      and p.id is distinct from new.id
+  ) then
+    raise exception 'This date range overlaps an existing payment period. Please use the same start and end dates as the existing period.';
+  end if;
+
   select coalesce(sum(dl.income), 0)
-  into expected_amount
+    into expected_amount
   from public.daily_logs dl
   where dl.user_id = new.user_id
     and (
@@ -52,7 +75,7 @@ begin
   end if;
 
   select coalesce(sum(p.amount), 0)
-  into already_received
+    into already_received
   from public.payments p
   where p.user_id = new.user_id
     and (
@@ -61,7 +84,7 @@ begin
     )
     and p.period_start = new.period_start
     and p.period_end = new.period_end
-    and p.id <> new.id;
+    and p.id is distinct from new.id;
 
   if already_received >= expected_amount then
     raise exception 'This pay period is already fully paid. No additional payment can be recorded.';
