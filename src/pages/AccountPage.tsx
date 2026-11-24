@@ -10,7 +10,7 @@ import {
   UserRound,
   Wallet,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { supabase } from "../lib/supabase";
 import { Button, Card, Input, PageHeader, Select } from "../components/ui";
 import { downloadText } from "../lib/utils";
@@ -146,7 +146,7 @@ export function AccountPage() {
     setSaving(false);
   }
 
-  async function handleAvatarUpload(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleAvatarUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || !user) return;
@@ -175,7 +175,7 @@ export function AccountPage() {
       if (uploadError) throw uploadError;
 
       const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-      const nextAvatarUrl = publicData.publicUrl;
+      const nextAvatarUrl = `${publicData.publicUrl}?v=${Date.now()}`;
       const { data, error } = await supabase.auth.updateUser({
         data: { avatar_url: nextAvatarUrl },
       });
