@@ -135,6 +135,12 @@ export function DailyLogPage() {
   const estimatedRate = Number(selectedWorkplaceInfo?.rate ?? 0);
   const estimatedIncome = classCount * estimatedRate;
   const selectedCurrency = selectedWorkplaceInfo?.currency ?? "USD";
+  const colorForWorkplace = (name: string) => {
+    const workplaceIndex = allWorkplaces.findIndex((workplace) => workplace.name === name);
+    return workplaceIndex >= 0
+      ? workplaceColors[workplaceIndex % workplaceColors.length]
+      : workplaceColor(name);
+  };
 
   function currencyForWorkplace(name: string) {
     return allWorkplaces.find((workplace) => workplace.name === name)?.currency ?? "USD";
@@ -526,7 +532,7 @@ export function DailyLogPage() {
                 return (
                   <span key={workplace.id} className="inline-flex min-w-0 items-center gap-2 text-xs text-muted">
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${color.dot}`} />
-                    <span className="max-w-36 truncate">{workplace.name}</span>
+                    <span className="max-w-36 truncate">{workplace.name}{workplace.archived ? " (archived)" : ""}</span>
                   </span>
                 );
               })}
@@ -550,7 +556,7 @@ export function DailyLogPage() {
                   name,
                   classes: dayLogs.filter((log: any) => log.workplace === name)
                     .reduce((sum: number, log: any) => sum + (log.classes ?? 0), 0),
-                  color: workplaceColor(name),
+                  color: colorForWorkplace(name),
                 }));
               const today = new Date();
               const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
