@@ -94,16 +94,15 @@ export function LandingPage() {
             </a>
           </nav>
           <div className="hidden items-center gap-3 md:flex">
-            <Link to="/login">
-              <Button variant="ghost">Sign in</Button>
+            <Link to="/login" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-muted transition hover:bg-soft hover:text-ink">
+              Sign in
             </Link>
-            <Link to="/login">
-              <Button>
-                Start tracking <ArrowRight size={16} />
-              </Button>
+            <Link to="/login" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-brand-dark px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#355f1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
+              Start tracking <ArrowRight size={16} />
             </Link>
           </div>
           <Button
+            type="button"
             variant="ghost"
             className="h-10 w-10 px-0 md:hidden"
             onClick={() => setMobileNav(!mobileNav)}
@@ -127,8 +126,8 @@ export function LandingPage() {
                   {item === "how" ? "How it works" : item}
                 </a>
               ))}
-              <Link to="/login" className="mt-2">
-                <Button className="w-full">Sign in to EarnEd</Button>
+              <Link to="/login" onClick={() => setMobileNav(false)} className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-dark px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#355f1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
+                Sign in to EarnEd
               </Link>
             </nav>
           </div>
@@ -169,15 +168,11 @@ export function LandingPage() {
                 always know what you earned, received, and are still owed.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link to="/login">
-                  <Button className="w-full px-6 sm:w-auto">
-                    Start tracking for free <ArrowRight size={17} />
-                  </Button>
+                <Link to="/login" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-dark px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-[#355f1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 sm:w-auto">
+                  Start tracking for free <ArrowRight size={17} />
                 </Link>
-                <a href="#how">
-                  <Button variant="secondary" className="w-full px-6 sm:w-auto">
-                    See how it works
-                  </Button>
+                <a href="#how" className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-line bg-surface px-6 text-sm font-semibold text-ink transition hover:bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 sm:w-auto">
+                  See how it works
                 </a>
               </div>
               <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
@@ -277,7 +272,7 @@ export function LandingPage() {
                 key={title}
                 className={`group p-6 transition hover:-translate-y-1 hover:shadow-lg ${index === 0 ? "sm:col-span-2 lg:col-span-1" : ""}`}
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-soft text-brand-dark transition group-hover:bg-brand group-hover:text-white">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-soft text-brand-dark transition group-hover:bg-brand-dark group-hover:text-white">
                   <Icon size={21} />
                 </div>
                 <h3 className="mt-5 text-lg font-bold">{title}</h3>
@@ -417,9 +412,7 @@ export function LandingPage() {
                       className={`shrink-0 transition ${openFaq === index ? "rotate-180" : ""}`}
                     />
                   </span>
-                  {openFaq === index && (
-                    <span id={`faq-answer-${index}`} className="mt-3 block pr-8 text-sm leading-6 text-muted">{answer}</span>
-                  )}
+                  <span id={`faq-answer-${index}`} hidden={openFaq !== index} className="mt-3 block pr-8 text-sm leading-6 text-muted">{answer}</span>
                 </button>
               ))}
             </div>
@@ -427,17 +420,15 @@ export function LandingPage() {
         </section>
 
         <section className="px-4 py-14 sm:px-6">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-brand px-6 py-12 text-center text-white sm:px-12 sm:py-16">
+          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-brand-dark px-6 py-12 text-center text-white sm:px-12 sm:py-16">
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-5xl">
               Ready to make every class count?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-white/80">
               Join tutors who want a clearer, calmer way to understand their income.
             </p>
-            <Link to="/login" className="mt-7 inline-block">
-              <Button variant="light">
-                Get started free <ArrowRight size={17} />
-              </Button>
+            <Link to="/login" className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/70 bg-white px-6 text-sm font-semibold text-brand-dark shadow-sm transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark">
+              Get started free <ArrowRight size={17} />
             </Link>
           </div>
         </section>
