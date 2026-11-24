@@ -129,6 +129,7 @@
   .dark .stat-amber,
   .dark .stat-blue {
     background: var(--soft);
+    color: var(--ink);
   }
 }
 
