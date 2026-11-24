@@ -376,7 +376,7 @@ export function TutorialsPage() {
               ["04", "Feedback & recap", "Praise effort, correct gently and review the key point.", "2–3 min"],
             ].map(([number, title, description, time]) => (
               <div key={number} className="flex gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-xs font-extrabold text-brand-dark dark:text-[#b8e986]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft dark:bg-[#26351f] text-xs font-extrabold text-brand-dark dark:text-[#b8e986]">
                   {number}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -437,7 +437,7 @@ export function TutorialsPage() {
               <button
                 key={item}
                 onClick={() => setCategory(item)}
-                className={`min-h-9 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold transition ${category === item ? "bg-brand text-white" : "border border-line bg-surface text-muted hover:text-ink"}`}
+                className={`min-h-9 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold transition ${category === item ? "bg-brand-dark text-white dark:bg-brand dark:text-[#14200f]" : "border border-line bg-surface text-muted hover:text-ink"}`}
               >
                 {item}
               </button>
