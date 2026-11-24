@@ -53,7 +53,7 @@ export function AppShell() {
   const [open, setOpen] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [hasSession, setHasSession] = useState(false);
-  const [userEmail, setUserEmail] = useState("User");
+  const [userFirstName, setUserFirstName] = useState("User");
   const location = useLocation();
   
   
@@ -61,20 +61,32 @@ export function AppShell() {
     async function checkSession() {
       const { data } = await supabase.auth.getSession();
       setHasSession(!!data.session);
-      setUserEmail(data.session?.user.email ?? "User");
+
+      const fullName =
+        data.session?.user.user_metadata?.full_name ||
+        data.session?.user.user_metadata?.name ||
+        "";
+
+      setUserFirstName(fullName.split(" ")[0] || "User");
       setSessionChecked(true);
     }
-  
+
     checkSession();
-  
+
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setHasSession(!!session);
-        setUserEmail(session?.user.email ?? "User");
+
+        const fullName =
+          session?.user.user_metadata?.full_name ||
+          session?.user.user_metadata?.name ||
+          "";
+
+        setUserFirstName(fullName.split(" ")[0] || "User");
         setSessionChecked(true);
       }
     );
-  
+
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -179,7 +191,7 @@ export function AppShell() {
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-dark">
                 <UserRound size={17} />
               </span>
-              <span className="hidden text-sm font-semibold sm:inline">{userEmail}</span>
+              <span className="hidden text-sm font-semibold sm:inline">{userFirstName}</span>
             </NavLink>
           </div>
         </header>

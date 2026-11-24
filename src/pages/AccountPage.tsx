@@ -13,12 +13,27 @@ import {
   Upload,
   UserRound,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
 import { Button, Card, Input, PageHeader, Select } from "../components/ui";
 import { dailyLogs, periods } from "../data/mock";
 import { downloadText } from "../lib/utils";
 
 export function AccountPage() {
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (!error) {
+        setUser(data.user);
+      }
+    }
+
+    loadUser();
+  }, []);
+
   const fileInput = useRef<HTMLInputElement>(null);
   const [share, setShare] = useState(false);
   const [imported, setImported] = useState("");
@@ -59,11 +74,11 @@ export function AccountPage() {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold">
                 Full name
-                <Input defaultValue="Mia Santos" className="mt-2" />
+                <Input defaultValue={user?.user_metadata?.full_name || user?.user_metadata?.name || ""} className="mt-2" />
               </label>
               <label className="text-sm font-semibold">
                 Email address
-                <Input defaultValue="mia@example.com" className="mt-2" disabled />
+                <Input defaultValue={user?.email || ""} className="mt-2" disabled />
               </label>
               <label className="text-sm font-semibold">
                 Default currency
