@@ -1,4 +1,5 @@
 import {
+  Camera,
   Check,
   CloudDownload,
   Download,
@@ -70,6 +71,9 @@ function dateTime(value?: string) {
 export function AccountPage() {
   const [user, setUser] = useState<any>(null);
   const [fullName, setFullName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
   const [defaultCurrency, setDefaultCurrency] = useState("USD");
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
   const [reminders, setReminders] = useState<ReminderPreferences>(defaultReminders);
@@ -102,6 +106,7 @@ export function AccountPage() {
           const metadata = data.user.user_metadata ?? {};
           setUser(data.user);
           setFullName(metadata.full_name || metadata.name || "");
+          setAvatarUrl(metadata.avatar_url || metadata.picture || "");
           setDefaultCurrency(metadata.default_currency || "USD");
           setTimezone(metadata.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
           setReminders({ ...defaultReminders, ...(metadata.reminder_preferences ?? {}) });
@@ -139,6 +144,51 @@ export function AccountPage() {
       setSaved(true);
     }
     setSaving(false);
+  }
+
+  async function handleAvatarUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !user) return;
+
+    setAvatarError("");
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please choose an image file.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("Choose an image smaller than 2 MB.");
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1] || "png";
+      const filePath = `${user.id}/avatar.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          contentType: file.type,
+          upsert: true,
+        });
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const nextAvatarUrl = publicData.publicUrl;
+      const { data, error } = await supabase.auth.updateUser({
+        data: { avatar_url: nextAvatarUrl },
+      });
+      if (error) throw error;
+
+      setUser(data.user);
+      setAvatarUrl(nextAvatarUrl);
+      setSaved(true);
+    } catch (error) {
+      setAvatarError(error instanceof Error ? error.message : "We could not upload your profile picture.");
+    } finally {
+      setAvatarUploading(false);
+    }
   }
 
   async function handlePasswordUpdate() {
@@ -273,6 +323,33 @@ export function AccountPage() {
               <div>
                 <h2 className="font-bold">Personal details</h2>
                 <p className="text-xs text-muted">Your profile information for this account</p>
+              </div>
+            </div>
+            <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-line bg-soft/50 p-4 sm:flex-row sm:items-center">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-surface bg-brand-soft text-brand-dark shadow-sm">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Your profile" className="h-full w-full object-cover" />
+                ) : (
+                  <UserRound size={30} />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">Profile picture</p>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  Google profile photos appear automatically when available. You can upload your own picture (JPG, PNG, or WebP, up to 2 MB).
+                </p>
+                <label className="mt-3 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink transition hover:bg-soft">
+                  <Camera size={16} />
+                  {avatarUploading ? "Uploading..." : avatarUrl ? "Change picture" : "Upload picture"}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="sr-only"
+                    disabled={avatarUploading}
+                    onChange={handleAvatarUpload}
+                  />
+                </label>
+                {avatarError && <p role="alert" className="mt-2 text-xs text-red-600 dark:text-red-300">{avatarError}</p>}
               </div>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
