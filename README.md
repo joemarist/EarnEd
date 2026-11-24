@@ -1,91 +1,108 @@
 # EarnEd — ESL Income Tracker
 
-Phase 1 is a responsive, frontend-only product prototype for online ESL tutors. It uses realistic mock data and deliberately has **no backend, authentication provider, or live persistence yet**.
+EarnEd is a responsive income-tracking application for independent ESL tutors. It helps users organize workplaces, record classes, reconcile payments, set income goals, and review reports.
 
-## Current stack
+## Features
 
-- React 19 + TypeScript + Vite
-- Tailwind CSS v4
-- React Router (data router)
-- Recharts
-- Lucide icons
-- Zod for form validation
-- Installable PWA shell
+- **Dashboard:** current-period earnings, received payments, outstanding balances, recent class logs, and six-month trends.
+- **Workplaces:** multiple workplaces, currencies, historical class rates, pay schedules, cutoff rules, and payment notes.
+- **Daily Log:** record classes by date and workplace while preserving the rate and income saved for each entry.
+- **Payments:** record full or partial payments, reconcile them against Daily Logs, and prevent overpayments and overlapping date ranges.
+- **Goals:** create personal income targets and calculate progress from matching Daily Log income.
+- **Reports:** filter by date and workplace, compare earned and received amounts by currency, and export CSV or print a PDF.
+- **Settings & Account:** update profile preferences, change password, export account data, and request account deletion.
+- **Tutorials & Tips:** remains available in the navigation; its content is intentionally reserved for a later update.
 
-The Figma Make workspace is Vite-based, so this UI prototype stays on the existing runtime. When the UI is approved, the page and component layer can be moved to Next.js App Router before Supabase is connected.
+## Technology
+
+- React 19 and TypeScript
+- Vite 8
+- Tailwind CSS 4
+- React Router 7
+- Supabase Auth and Postgres
+- Recharts and Lucide icons
+- Installable Progressive Web App (PWA)
 
 ## Run locally
 
+Use a Node.js version supported by Vite 8.
+
 ```bash
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
-In Figma Make, the development server is already managed automatically.
+Open the local URL printed by Vite.
 
-## Folder structure
+## Environment variables
+
+Create a `.env.local` file in the project root:
+
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY
+```
+
+Use the URL and public/anon key from your Supabase project settings. Never put a Supabase service-role key in a `VITE_*` variable or any client-side file.
+
+## Supabase database
+
+The application expects user-owned records in these tables:
+
+- `workplaces`
+- `daily_logs`
+- `payments`
+- `goals`
+
+The `daily_logs` records are linked to workplaces through `workplace_id`; legacy records can still be matched by workplace name. Payment reconciliation uses saved Daily Log income and a database trigger to guard against overpayments and overlapping payment ranges.
+
+SQL files currently tracked in `supabase/migrations/` cover the goals table and payment safeguards/indexes. The original base-table setup for `workplaces`, `daily_logs`, and `payments` was configured separately in the Supabase project and is not yet fully represented as a clean, from-scratch migration set in this repository. Before setting up a new Supabase project, that base schema and its Row Level Security policies must also be recreated.
+
+Enable Row Level Security on every user-owned table and ensure policies restrict reads and writes to rows where `auth.uid() = user_id`. The client uses only the public/anon key; database policies are an essential part of the security boundary.
+
+Account deletion calls a Supabase Edge Function named `delete-account`. Ensure that function is deployed and configured in the Supabase project before relying on the delete-account action.
+
+## Current limitations
+
+- Spreadsheet import is not available yet.
+- Reminder preferences can be saved, but automatic email and push notifications are not enabled.
+- Timezone is saved as an account preference for future date and reminder features; current date calculations still use the browser's local timezone.
+- The default currency is an account preference; each workplace continues to store its own currency.
+- No automated test suite is currently configured.
+
+## Production checks
+
+Before deploying a new release:
+
+1. Confirm the production Supabase URL and public key are configured.
+2. Confirm all required tables, indexes, triggers, and Row Level Security policies exist.
+3. Confirm the `delete-account` Edge Function is deployed if account deletion is enabled.
+4. Run `npm run build` and resolve any TypeScript or Vite build errors.
+5. Test sign-in, workplace creation, class logging, partial/full payments, overlapping payment protection, goals, reports, exports, account settings, and both light and dark themes.
+6. Test the app at mobile and desktop widths, including the installed PWA if it will be distributed that way.
+
+## Project structure
 
 ```text
 src/
-  app/
-    App.tsx             # RouterProvider entry
-    routes.tsx          # Public and app routes
-  components/
-    AppShell.tsx        # Responsive sidebar, header and mobile navigation
-    Brand.tsx           # EarnEd brand component
-    ui.tsx              # Shared buttons, cards, fields, badges and headers
-  data/
-    mock.ts             # Typed mock repository; replace this boundary first
-  lib/
-    utils.ts            # Formatting, class and export helpers
-  pages/                # Route-level UI
+  app/                 Router and route definitions
+  components/          App shell, shared UI, and branding
+  lib/                 Supabase client and utility helpers
+  pages/               Dashboard and feature pages
+  data/                Legacy mock data (not the source for live account records)
 public/
-  brand/                # Supplied EarnEd artwork
-  manifest.webmanifest  # PWA metadata
-  sw.js                 # Minimal production app-shell cache
+  brand/               EarnEd artwork
+  manifest.webmanifest PWA metadata
+  sw.js                Production service worker
+supabase/
+  migrations/          SQL migrations and payment safeguards
 ```
 
-## Mock-data boundary
+## Available scripts
 
-All shared mock entities live in `src/data/mock.ts`. Route components consume typed exports from that file rather than embedding server calls. During backend integration, replace these imports with repository functions or typed query hooks while leaving the page components largely unchanged.
-
-Recommended interface:
-
-```ts
-interface IncomeRepository {
-  listWorkplaces(): Promise<Workplace[]>;
-  listDailyLogs(range: DateRange): Promise<DailyLog[]>;
-  listPayments(workplaceId?: string): Promise<Payment[]>;
-  getDashboardSummary(range: DateRange): Promise<DashboardSummary>;
-}
+```bash
+npm run dev       # Start the development server
+npm run build     # Create a production build
+npm run preview   # Preview the production build
+npm run format    # Format supported source files
 ```
-
-## Planned Supabase model
-
-Use UUID primary keys, `user_id`, `created_at`, `updated_at`, and nullable `deleted_at` on every user-owned table:
-
-- `profiles` / auth users
-- `workplaces`
-- `rates` (`workplace_id`, `amount`, `effective_from`)
-- `pay_schedules`
-- `daily_logs` (`workplace_id`, `date`, `classes`, `remarks`)
-- `payments` (`workplace_id`, `period_start`, `period_end`, `amount_received`, `date_received`)
-- `goals`
-- `share_links`
-- `audit_events`
-
-Add composite indexes such as `(user_id, date)` for daily logs and `(user_id, period_end)` for payments. Preserve rate history instead of overwriting old values so historical income remains reproducible.
-
-## Connecting Supabase later
-
-1. Move the approved UI to Next.js App Router and keep server-only code out of client components.
-2. Create typed Zod schemas shared by server actions/route handlers and client forms.
-3. Add Supabase environment variables only through deployment secrets; never expose the service-role key.
-4. Implement auth with secure, HTTP-only sessions and PKCE/OAuth callbacks.
-5. Enable RLS on every user-owned table. Policies must require `auth.uid() = user_id` for select, insert, update, and soft-delete.
-6. Resolve `user_id` on the server, not from a trusted client payload.
-7. Add CSRF protection to mutations, rate-limit auth and share-link endpoints, and audit sensitive actions.
-8. Replace `src/data/mock.ts` consumers with repository/query hooks one feature at a time.
-9. Generate PDF/CSV exports on the server for full datasets; sanitize imported spreadsheet values before validation.
-
-No Supabase project, keys, database, or backend code has been added in Phase 1.
