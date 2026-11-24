@@ -200,6 +200,7 @@ export function DailyLogPage() {
         user_id: userData.user.id,
         log_date: selectedDate,
         workplace: selectedWorkplace,
+        workplace_id: workplaceInfo.id,
         classes: classCount,
         rate_per_class: rate,
         income,
