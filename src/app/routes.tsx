@@ -78,5 +78,11 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  { path: "*", redirectTo: "/" },
+  {
+    path: "*",
+    lazy: async () => {
+      const { LandingPage } = await import("../pages/LandingPage");
+      return { Component: LandingPage };
+    },
+  },
 ]);
