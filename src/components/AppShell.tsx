@@ -40,11 +40,11 @@ function ThemeButton() {
   return (
     <Button
       variant="ghost"
-      className="h-10 w-10 px-0"
+      className="h-11 w-11 border border-line bg-surface px-0 shadow-sm hover:bg-soft"
       onClick={() => setDark(!dark)}
       aria-label="Toggle dark mode"
     >
-      {dark ? <Sun size={18} /> : <Moon size={18} />}
+      {dark ? <Sun size={21} strokeWidth={2.2} /> : <Moon size={21} strokeWidth={2.2} />}
     </Button>
   );
 }
@@ -54,8 +54,15 @@ export function AppShell() {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [userFirstName, setUserFirstName] = useState("User");
+  const [userAvatar, setUserAvatar] = useState("");
+  const [clockTime, setClockTime] = useState(() => new Date());
   const location = useLocation();
-  const currentDate = new Date();
+  const currentDate = clockTime;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockTime(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     setOpen(false);
@@ -87,6 +94,7 @@ export function AppShell() {
         "";
 
       setUserFirstName(fullName.split(" ")[0] || "User");
+      setUserAvatar(data.session?.user.user_metadata?.avatar_url || data.session?.user.user_metadata?.picture || "");
       setSessionChecked(true);
     }
 
@@ -102,6 +110,7 @@ export function AppShell() {
           "";
 
         setUserFirstName(fullName.split(" ")[0] || "User");
+        setUserAvatar(session?.user.user_metadata?.avatar_url || session?.user.user_metadata?.picture || "");
         setSessionChecked(true);
       }
     );
@@ -192,14 +201,30 @@ export function AppShell() {
               <p className="text-xs text-muted">{formattedDate}</p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div
+              className="rounded-xl border border-line bg-surface px-2.5 py-2 text-xs font-bold tabular-nums text-ink shadow-sm sm:px-3 sm:text-sm"
+              aria-label={currentDate.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" })}
+              title="Your local time"
+            >
+              {currentDate.toLocaleTimeString(undefined, {
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
+            </div>
             <ThemeButton />
             <NavLink
               to="/app/account"
-              className="ml-1 flex items-center gap-2 rounded-xl p-1.5 hover:bg-soft"
+              aria-label="Open profile and account settings"
+              className="ml-0.5 flex items-center gap-2 rounded-xl p-1 hover:bg-soft sm:ml-1 sm:p-1.5"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-dark">
-                <UserRound size={17} />
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-line bg-brand-soft text-brand-dark">
+                {userAvatar ? (
+                  <img src={userAvatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <UserRound size={18} />
+                )}
               </span>
               <span className="hidden text-sm font-semibold sm:inline">{userFirstName}</span>
             </NavLink>
