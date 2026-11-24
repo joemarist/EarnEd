@@ -56,6 +56,10 @@ export function AppShell() {
   const [userFirstName, setUserFirstName] = useState("User");
   const location = useLocation();
   const currentDate = new Date();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
   const currentHour = currentDate.getHours();
 
   const greeting =
@@ -139,6 +143,7 @@ export function AppShell() {
               key={to}
               to={to}
               end={end}
+              onClick={() => setOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${isActive ? "bg-brand text-white shadow-sm" : "text-muted hover:bg-soft hover:text-ink"}`
               }
