@@ -82,6 +82,56 @@ function csvCell(value: string | number) {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
 
+function calculateAllocatedPayments(
+  logs: DailyLog[],
+  payments: Payment[],
+  workplace: Workplace
+) {
+  const workplaceLogs = logs
+    .filter((log) =>
+      log.workplace_id === workplace.id ||
+      (!log.workplace_id && log.workplace === workplace.name)
+    )
+    .slice()
+    .sort((a, b) => a.log_date.localeCompare(b.log_date) || a.id.localeCompare(b.id));
+
+  const remainingByLog = new Map(
+    workplaceLogs.map((log) => [log.id, Math.max(Number(log.income ?? 0), 0)])
+  );
+  const allocatedByLog = new Map<string, number>();
+
+  // Earlier recorded pay periods claim their covered log income first.
+  const orderedPayments = payments
+    .filter((payment) =>
+      payment.workplace_id === workplace.id ||
+      (!payment.workplace_id && payment.workplace_name === workplace.name)
+    )
+    .slice()
+    .sort((a, b) =>
+      a.period_start.localeCompare(b.period_start) ||
+      a.period_end.localeCompare(b.period_end) ||
+      a.payment_date.localeCompare(b.payment_date)
+    );
+
+  for (const payment of orderedPayments) {
+    let unallocated = Math.max(Number(payment.amount ?? 0), 0);
+    for (const log of workplaceLogs) {
+      if (log.log_date < payment.period_start || log.log_date > payment.period_end) continue;
+      if (unallocated <= 0.005) break;
+
+      const logRemaining = remainingByLog.get(log.id) ?? 0;
+      if (logRemaining <= 0.005) continue;
+
+      const allocated = Math.min(logRemaining, unallocated);
+      remainingByLog.set(log.id, logRemaining - allocated);
+      allocatedByLog.set(log.id, (allocatedByLog.get(log.id) ?? 0) + allocated);
+      unallocated -= allocated;
+    }
+  }
+
+  return { allocatedByLog, remainingByLog };
+}
+
 export function PaymentsPage() {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [logs, setLogs] = useState<DailyLog[]>([]);
@@ -177,12 +227,17 @@ export function PaymentsPage() {
 
   const receivedForSelectedPeriod = useMemo(() => {
     if (!selectedWorkplace || !periodStart || !periodEnd || periodEnd < periodStart) return 0;
-    return payments.reduce((total, payment) => {
-      const sameWorkplace = payment.workplace_id === selectedWorkplace.id || (!payment.workplace_id && payment.workplace_name === selectedWorkplace.name);
-      const samePeriod = payment.period_start === periodStart && payment.period_end === periodEnd;
-      return sameWorkplace && samePeriod ? total + Number(payment.amount ?? 0) : total;
+    const { allocatedByLog } = calculateAllocatedPayments(logs, payments, selectedWorkplace);
+    return logs.reduce((total, log) => {
+      const belongsToWorkplace =
+        log.workplace_id === selectedWorkplace.id ||
+        (!log.workplace_id && log.workplace === selectedWorkplace.name);
+      const inPeriod = log.log_date >= periodStart && log.log_date <= periodEnd;
+      return belongsToWorkplace && inPeriod
+        ? total + (allocatedByLog.get(log.id) ?? 0)
+        : total;
     }, 0);
-  }, [payments, selectedWorkplace, periodStart, periodEnd]);
+  }, [logs, payments, selectedWorkplace, periodStart, periodEnd]);
 
   const remainingForSelectedPeriod = Math.max(expectedForSelectedPeriod - receivedForSelectedPeriod, 0);
   const periodAlreadyPaid = expectedForSelectedPeriod > 0 && remainingForSelectedPeriod <= 0.005;
@@ -350,32 +405,26 @@ export function PaymentsPage() {
       const [latestLogsResult, latestPaymentsResult] = await Promise.all([
         supabase
           .from("daily_logs")
-          .select("workplace_id, workplace, income")
+          .select("id, workplace_id, workplace, log_date, classes, rate_per_class, income")
           .eq("user_id", signedInUser.id)
           .gte("log_date", periodStart)
           .lte("log_date", periodEnd),
         supabase
           .from("payments")
-          .select("amount, workplace_id, workplace_name")
+          .select("id, amount, workplace_id, workplace_name, period_start, period_end, payment_date, currency, payment_method, reference_number, notes")
           .eq("user_id", signedInUser.id)
-          .eq("period_start", periodStart)
-          .eq("period_end", periodEnd),
+          .lte("period_start", periodEnd)
+          .gte("period_end", periodStart),
       ]);
       if (latestLogsResult.error) throw new Error(latestLogsResult.error.message);
       if (latestPaymentsResult.error) throw new Error(latestPaymentsResult.error.message);
 
-      const latestExpected = (latestLogsResult.data ?? []).reduce((total, log) => {
-        const sameWorkplace =
-          log.workplace_id === selectedWorkplace.id ||
-          (!log.workplace_id && log.workplace === selectedWorkplace.name);
-        return sameWorkplace ? total + Number(log.income ?? 0) : total;
-      }, 0);
-      const latestReceived = (latestPaymentsResult.data ?? []).reduce((total, payment) => {
-        const sameWorkplace =
-          payment.workplace_id === selectedWorkplace.id ||
-          (!payment.workplace_id && payment.workplace_name === selectedWorkplace.name);
-        return sameWorkplace ? total + Number(payment.amount ?? 0) : total;
-      }, 0);
+      const latestLogs = (latestLogsResult.data ?? []) as DailyLog[];
+      const latestPayments = (latestPaymentsResult.data ?? []) as Payment[];
+      const latestExpected = latestLogs.reduce((total, log) => total + Number(log.income ?? 0), 0);
+      const latestAllocated = calculateAllocatedPayments(latestLogs, latestPayments, selectedWorkplace);
+      const latestReceived = latestLogs.reduce((total, log) =>
+        total + (latestAllocated.allocatedByLog.get(log.id) ?? 0), 0);
       const latestRemaining = Math.max(latestExpected - latestReceived, 0);
 
       if (latestExpected <= 0) {
@@ -568,7 +617,7 @@ export function PaymentsPage() {
           <div>
             <h3 className="font-bold text-amber-900 dark:text-amber-200">How reconciliation works</h3>
             <p className="mt-1 text-sm leading-6 text-amber-800/80 dark:text-amber-200/70">
-              Choose the exact start and end dates shown by your workplace when recording a payment. Expected pay is summed from your Daily Logs for those dates. You can record more than one partial payment for the same period, but the combined amount cannot exceed the income earned. Once the balance reaches zero, the period is locked against additional payments.
+              Choose the exact start and end dates shown by your workplace when recording a payment. Expected pay is summed from your Daily Logs for those dates. Payments are allocated to covered Daily Logs in date order, so a payment for a wider period also covers the dates inside it. Use one consistent pay-period range when recording partial payments; overlapping alternative ranges are not allowed.
             </p>
             <p className="mt-2 text-xs leading-5 text-amber-800/80 dark:text-amber-200/70">
               Period dates are entered explicitly rather than guessed from the schedule, because bi-weekly schedules need a confirmed cycle anchor date.
