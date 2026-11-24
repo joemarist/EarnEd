@@ -115,8 +115,8 @@ export function PaymentsPage() {
       setPageError("");
 
       try {
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError || !userData.user) {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !sessionData.session?.user) {
           throw new Error("Please sign in to view your payment records.");
         }
 
@@ -124,17 +124,17 @@ export function PaymentsPage() {
           supabase
             .from("workplaces")
             .select("id, name, currency, archived")
-            .eq("user_id", userData.user.id)
+            .eq("user_id", sessionData.session.user.id)
             .order("created_at", { ascending: true }),
           supabase
             .from("daily_logs")
             .select("id, workplace_id, workplace, log_date, classes, rate_per_class, income")
-            .eq("user_id", userData.user.id)
+            .eq("user_id", sessionData.session.user.id)
             .order("log_date", { ascending: true }),
           supabase
             .from("payments")
-            .select("*")
-            .eq("user_id", userData.user.id)
+            .select("id, workplace_id, workplace_name, period_start, period_end, amount, currency, payment_date, payment_method, reference_number, notes")
+            .eq("user_id", sessionData.session.user.id)
             .order("payment_date", { ascending: false }),
         ]);
 
@@ -341,24 +341,55 @@ export function PaymentsPage() {
     setSaveError("");
 
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData.user) throw new Error("You must be signed in to record a payment.");
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const signedInUser = sessionData.session?.user;
+      if (sessionError || !signedInUser) throw new Error("You must be signed in to record a payment.");
 
-      const { data: existingPayments, error: existingError } = await supabase
-        .from("payments")
-        .select("amount")
-        .eq("user_id", userData.user.id)
-        .eq("workplace_id", selectedWorkplace.id)
-        .eq("period_start", periodStart)
-        .eq("period_end", periodEnd);
-      if (existingError) throw new Error(existingError.message);
-      const latestReceived = (existingPayments ?? []).reduce((total, item) => total + Number(item.amount ?? 0), 0);
-      const latestRemaining = Math.max(expectedForSelectedPeriod - latestReceived, 0);
-      if (latestRemaining <= 0.005) throw new Error("This pay period has already been fully paid. Refresh to see the latest status.");
-      if (numericAmount > latestRemaining + 0.005) throw new Error("This amount is higher than the updated remaining balance of " + formatMoney(latestRemaining, selectedWorkplace.currency) + ". Please refresh and check again.");
+      // Recheck the latest saved logs and payments immediately before inserting.
+      // This also includes legacy records linked by workplace name instead of workplace_id.
+      const [latestLogsResult, latestPaymentsResult] = await Promise.all([
+        supabase
+          .from("daily_logs")
+          .select("workplace_id, workplace, income")
+          .eq("user_id", signedInUser.id)
+          .gte("log_date", periodStart)
+          .lte("log_date", periodEnd),
+        supabase
+          .from("payments")
+          .select("amount, workplace_id, workplace_name")
+          .eq("user_id", signedInUser.id)
+          .eq("period_start", periodStart)
+          .eq("period_end", periodEnd),
+      ]);
+      if (latestLogsResult.error) throw new Error(latestLogsResult.error.message);
+      if (latestPaymentsResult.error) throw new Error(latestPaymentsResult.error.message);
+
+      const latestExpected = (latestLogsResult.data ?? []).reduce((total, log) => {
+        const sameWorkplace =
+          log.workplace_id === selectedWorkplace.id ||
+          (!log.workplace_id && log.workplace === selectedWorkplace.name);
+        return sameWorkplace ? total + Number(log.income ?? 0) : total;
+      }, 0);
+      const latestReceived = (latestPaymentsResult.data ?? []).reduce((total, payment) => {
+        const sameWorkplace =
+          payment.workplace_id === selectedWorkplace.id ||
+          (!payment.workplace_id && payment.workplace_name === selectedWorkplace.name);
+        return sameWorkplace ? total + Number(payment.amount ?? 0) : total;
+      }, 0);
+      const latestRemaining = Math.max(latestExpected - latestReceived, 0);
+
+      if (latestExpected <= 0) {
+        throw new Error("No Daily Logs income exists for this workplace and pay period.");
+      }
+      if (latestRemaining <= 0.005) {
+        throw new Error("This pay period has already been fully paid. No additional payment can be recorded.");
+      }
+      if (numericAmount > latestRemaining + 0.005) {
+        throw new Error("This amount is higher than the updated remaining balance of " + formatMoney(latestRemaining, selectedWorkplace.currency) + ". Please refresh and check again.");
+      }
 
       const { error } = await supabase.from("payments").insert({
-        user_id: userData.user.id,
+        user_id: sessionData.session.user.id,
         workplace_id: selectedWorkplace.id,
         workplace_name: selectedWorkplace.name,
         period_start: periodStart,
@@ -585,7 +616,7 @@ export function PaymentsPage() {
 
                 <label className="text-sm font-semibold">
                   Amount received
-                  <Input type="number" min="0.01" max={remainingForSelectedPeriod.toFixed(2)} step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="mt-2" disabled={periodAlreadyPaid || expectedForSelectedPeriod <= 0} />
+                  <Input type="number" min="0.01" max={remainingForSelectedPeriod.toFixed(2)} step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="mt-2" disabled={periodAlreadyPaid || expectedForSelectedPeriod <= 0 || !periodStart || !periodEnd || periodEnd < periodStart} />
                   {selectedWorkplace && <span className="mt-1 block text-xs font-normal text-muted">Currency: {selectedWorkplace.currency}</span>}
                 </label>
                 <label className="text-sm font-semibold">
@@ -621,7 +652,7 @@ export function PaymentsPage() {
 
               <div className="mt-5 flex justify-end gap-2">
                 <Button variant="ghost" onClick={() => setRecording(false)} disabled={saving}>Cancel</Button>
-                <Button onClick={savePayment} disabled={saving || workplaces.length === 0 || periodAlreadyPaid || expectedForSelectedPeriod <= 0 || !amount.trim() || Number(amount) <= 0 || Number(amount) > remainingForSelectedPeriod + 0.005}>{saving ? "Saving..." : "Save payment"}</Button>
+                <Button onClick={savePayment} disabled={saving || workplaces.length === 0 || periodAlreadyPaid || expectedForSelectedPeriod <= 0 || !periodStart || !periodEnd || periodEnd < periodStart || !amount.trim() || Number(amount) <= 0 || Number(amount) > remainingForSelectedPeriod + 0.005}>{saving ? "Saving..." : "Save payment"}</Button>
               </div>
             </div>
           </Card>
