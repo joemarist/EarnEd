@@ -123,3 +123,17 @@ public/
 supabase/
   migrations/          SQL safeguards and schema migrations
 ```
+
+## Static image assets and Git LFS
+
+The QR image, developer profile image, and small brand PNGs are used directly by the public site. Keep these files as ordinary Git blobs (not Git LFS pointers) so static hosting receives the actual image bytes. After pulling the latest `.gitattributes`, restore your local LFS files and recommit those assets as regular files:
+
+```bash
+git lfs install
+git lfs pull
+git add --renormalize public/My_gcash.jpg public/developer-placeholder.png public/brand
+git commit -m "Store public site images directly in Git"
+git push origin main
+```
+
+Check the files on GitHub afterward: their file sizes should be the actual image sizes, not approximately 130 bytes.
