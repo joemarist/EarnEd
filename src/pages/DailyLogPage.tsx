@@ -43,6 +43,8 @@ export function DailyLogPage() {
   );
   const [logs, setLogs] = useState<any[]>([]);
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [allWorkplaces, setAllWorkplaces] = useState<Workplace[]>([]);
+  const [reloadKey, setReloadKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
 
@@ -64,7 +66,6 @@ export function DailyLogPage() {
             .from("workplaces")
             .select("id, name, currency, rate, rate_effective, archived")
             .eq("user_id", userData.user.id)
-            .eq("archived", false)
             .order("created_at", { ascending: true }),
           supabase
             .from("daily_logs")
@@ -76,7 +77,9 @@ export function DailyLogPage() {
         if (workplaceResult.error) throw new Error(workplaceResult.error.message);
         if (logResult.error) throw new Error(logResult.error.message);
         if (active) {
-          setWorkplaces((workplaceResult.data ?? []) as Workplace[]);
+          const savedWorkplaces = (workplaceResult.data ?? []) as Workplace[];
+          setAllWorkplaces(savedWorkplaces);
+          setWorkplaces(savedWorkplaces.filter((workplace) => !workplace.archived));
           setLogs(logResult.data ?? []);
         }
       } catch (error) {
@@ -92,7 +95,7 @@ export function DailyLogPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const [adding, setAdding] = useState(false);
   const [viewingDayLogs, setViewingDayLogs] = useState<any[] | null>(null);
@@ -115,7 +118,7 @@ export function DailyLogPage() {
   const selectedCurrency = selectedWorkplaceInfo?.currency ?? "USD";
 
   function currencyForWorkplace(name: string) {
-    return workplaces.find((workplace) => workplace.name === name)?.currency ?? "USD";
+    return allWorkplaces.find((workplace) => workplace.name === name)?.currency ?? "USD";
   }
 
   function formatIncomeSummary(records: any[]) {
@@ -130,7 +133,7 @@ export function DailyLogPage() {
   }
 
   async function saveQuickAdd() {
-    if (!selectedDate || !selectedWorkplace || classCount < 0) {
+    if (!selectedDate || !selectedWorkplace || !Number.isInteger(classCount) || classCount < 0) {
       setSaveError("Please fill in all required fields.");
       return;
     }
@@ -211,16 +214,7 @@ export function DailyLogPage() {
       return;
     }
 
-    setLogs((previous) => [
-      ...previous.filter(
-        (log) =>
-          !(
-            log.log_date === selectedDate &&
-            log.workplace === selectedWorkplace
-          )
-      ),
-      savedLog,
-    ]);
+    setLogs((previous) => [...previous, savedLog]);
     setAdding(false);
     setSaving(false);
     setRemark("");
@@ -431,6 +425,7 @@ export function DailyLogPage() {
         description="Track every class and let EarnEd apply the right rate for that date."
         action={
           <Button
+            disabled={workplaces.length === 0}
             onClick={() => {
               setSelectedDate(
                 `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`
@@ -449,7 +444,7 @@ export function DailyLogPage() {
       {pageError && (
         <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
           <span>{pageError}</span>
-          <Button variant="secondary" onClick={() => window.location.reload()}>Try again</Button>
+          <Button variant="secondary" onClick={() => setReloadKey((value) => value + 1)} disabled={loading}>Try again</Button>
         </div>
       )}
       {workplaces.length === 0 && !pageError && (
@@ -785,6 +780,7 @@ export function DailyLogPage() {
 
               <button
                 type="button"
+                disabled={workplaces.length === 0}
                 onClick={() => {
                   setSelectedDate(viewingDayLogs[0].log_date);
                   setSelectedWorkplace(workplaces[0]?.name ?? "");
@@ -812,7 +808,7 @@ export function DailyLogPage() {
             <div onMouseDown={(event) => event.stopPropagation()}>
               <h2 className="text-xl font-bold">Add classes</h2>
               <p className="mt-1 text-sm text-muted">
-                Income updates automatically from the active rate.
+                New entries use the workplace rate saved now. Each entry keeps its own rate for future reference.
               </p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <label className="text-sm font-semibold">
