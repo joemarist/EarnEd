@@ -302,6 +302,21 @@ export function DashboardPage() {
   }).filter((workplace) => workplace.earned > 0 || workplace.outstanding > 0)
     .sort((a, b) => b.outstanding - a.outstanding), [selectedWorkplaces, filteredLogs, filteredPayments]);
 
+  const workplaceIncomeGroups = useMemo(() => {
+    const groups = new Map<string, Array<{ workplace: string; earned: number }>>();
+    for (const workplace of workplaceBalances) {
+      const rows = groups.get(workplace.currency) ?? [];
+      rows.push({ workplace: workplace.name, earned: workplace.earned });
+      groups.set(workplace.currency, rows);
+    }
+    return Array.from(groups.entries())
+      .map(([currency, data]) => ({
+        currency,
+        data: data.sort((a, b) => b.earned - a.earned),
+      }))
+      .sort((a, b) => a.currency.localeCompare(b.currency));
+  }, [workplaceBalances]);
+
   const recentLogs = filteredLogs.slice(0, 6);
   const currentMonthLogs = filteredLogs.filter((log) => monthKey(log.log_date) === currentMonth);
   const currentMonthClasses = currentMonthLogs.reduce((sum, log) => sum + Number(log.classes ?? 0), 0);
@@ -412,6 +427,51 @@ export function DashboardPage() {
           </div>
           <p className="mt-3 text-xs text-muted">Across selected workplaces</p>
         </Card>
+      </section>
+
+      <section className="mt-5 space-y-5">
+        {workplaceIncomeGroups.length > 0 ? workplaceIncomeGroups.map((group) => (
+          <Card key={group.currency} className="p-5">
+            <div>
+              <h2 className="font-bold">Income by workplace · {group.currency}</h2>
+              <p className="text-xs text-muted">Total earned from your saved Daily Logs, grouped by workplace</p>
+            </div>
+            <div className="mt-5 h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={group.data} margin={{ top: 8, right: 12, left: 4, bottom: 42 }}>
+                  <CartesianGrid vertical={false} stroke="var(--line)" />
+                  <XAxis
+                    dataKey="workplace"
+                    axisLine={false}
+                    tickLine={false}
+                    interval={0}
+                    angle={-20}
+                    textAnchor="end"
+                    height={58}
+                    tick={{ fill: "var(--muted)", fontSize: 11 }}
+                  />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--muted)", fontSize: 11 }} width={56} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--surface)",
+                      border: "1px solid var(--line)",
+                      borderRadius: "12px",
+                      color: "var(--ink)",
+                    }}
+                    labelStyle={{ color: "var(--ink)" }}
+                    formatter={(value) => formatMoney(Number(value), group.currency)}
+                  />
+                  <Bar dataKey="earned" name="Total earned" fill="#76BE3F" radius={[5, 5, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        )) : (
+          <Card className="p-5">
+            <h2 className="font-bold">Income by workplace</h2>
+            <p className="mt-1 text-sm text-muted">Your workplace income comparison will appear after you record class income.</p>
+          </Card>
+        )}
       </section>
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
