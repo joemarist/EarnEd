@@ -413,6 +413,10 @@ export function DailyLogPage() {
       .sort((a, b) => b.log_date.localeCompare(a.log_date));
   }, [monthlyLogs, searchTerm, workplaceFilter]);
 
+  useEffect(() => {
+    setListPage(1);
+  }, [currentMonth]);
+
   const pageSize = 10;
   const totalListPages = Math.max(1, Math.ceil(filteredListLogs.length / pageSize));
   const safeListPage = Math.min(listPage, totalListPages);
