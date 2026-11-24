@@ -1,6 +1,4 @@
 import {
-  ArrowDownRight,
-  ArrowUpRight,
   BookOpen,
   CalendarDays,
   CircleDollarSign,
@@ -19,7 +17,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Badge, Button, Card, PageHeader, Select } from "../components/ui";
+import { Button, Card, PageHeader, Select } from "../components/ui";
 import { supabase } from "../lib/supabase";
 
 type Workplace = {
