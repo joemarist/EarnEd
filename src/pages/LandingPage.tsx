@@ -6,8 +6,6 @@ import {
   Check,
   ChevronDown,
   CircleDollarSign,
-  Code2,
-  ContactRound,
   Menu,
   ShieldCheck,
   Sparkles,
@@ -337,7 +335,7 @@ export function LandingPage() {
             <div className="absolute -inset-4 -rotate-3 rounded-[2rem] bg-brand-soft" />
             <img
               src="/developer-placeholder.png"
-              alt="Developer placeholder portrait"
+              alt="Illustration representing the EarnEd workspace"
               className="relative aspect-[4/5] w-full rounded-[1.75rem] object-cover object-top shadow-xl"
             />
             <div className="absolute -bottom-5 -right-4 rounded-2xl bg-surface p-4 shadow-xl">
@@ -348,7 +346,7 @@ export function LandingPage() {
             </div>
           </div>
           <div>
-            <p className="section-kicker">Meet the developer</p>
+            <p className="section-kicker">Made for independent tutors</p>
             <h2 className="section-title text-left">
               A clearer view of the work behind every paycheck.
             </h2>
@@ -358,23 +356,6 @@ export function LandingPage() {
             <p className="mt-4 text-base leading-7 text-muted">
               As the product grows, this space can share the story behind EarnEd and the people it is built to support.
             </p>
-            <div className="mt-7 flex gap-3">
-              <a href="#" aria-label="LinkedIn">
-                <Button variant="secondary" className="h-11 w-11 px-0">
-                  <ContactRound size={18} />
-                </Button>
-              </a>
-              <a href="#" aria-label="GitHub">
-                <Button variant="secondary" className="h-11 w-11 px-0">
-                  <Code2 size={18} />
-                </Button>
-              </a>
-              <a href="mailto:hello@example.com">
-                <Button variant="secondary">
-                  Say hello <ArrowRight size={16} />
-                </Button>
-              </a>
-            </div>
           </div>
         </section>
 
@@ -430,11 +411,7 @@ export function LandingPage() {
       <footer className="border-t border-line py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-sm text-muted sm:flex-row sm:px-6">
           <Brand />
-          <p>© 2025 EarnEd. Built for tutors everywhere.</p>
-          <div className="flex gap-5">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-          </div>
+          <p>© {new Date().getFullYear()} EarnEd. Built for tutors everywhere.</p>
         </div>
       </footer>
     </div>
