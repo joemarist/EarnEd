@@ -469,14 +469,15 @@ export function DailyLogPage() {
         <div className="flex items-center gap-2">
         <Button
           variant="secondary"
-          className="h-10 w-10 px-0"
+          aria-label="Previous month"
+          className="h-11 w-11 shrink-0 px-0"
           onClick={() =>
             setCurrentMonth(
               new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
             )
           }
         >
-          <ChevronLeft size={17} />
+          <ChevronLeft size={21} />
         </Button>
           <h2 className="min-w-32 text-center font-bold">
             {currentMonth.toLocaleDateString("en-US", {
@@ -486,14 +487,15 @@ export function DailyLogPage() {
           </h2>
           <Button
             variant="secondary"
-            className="h-10 w-10 px-0"
+            aria-label="Next month"
+            className="h-11 w-11 shrink-0 px-0"
             onClick={() =>
               setCurrentMonth(
                 new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
               )
             }
           >
-            <ChevronRight size={17} />
+            <ChevronRight size={21} />
           </Button>
           <Button
             variant="ghost"
@@ -648,52 +650,62 @@ export function DailyLogPage() {
               ))}
             </Select>
           </div>
-          <div className="divide-y divide-line">
-          {monthlyLogs
-            .filter((log) => {
+          <div className="space-y-3 p-3 sm:p-4">
+            {monthlyLogs
+              .filter((log) => {
+                const term = searchTerm.toLowerCase().trim();
+                const matchesSearch =
+                  !term ||
+                  (log.workplace ?? "").toLowerCase().includes(term) ||
+                  (log.notes ?? "").toLowerCase().includes(term) ||
+                  log.log_date.includes(term);
+                const matchesWorkplace =
+                  workplaceFilter === "All workplaces" ||
+                  log.workplace === workplaceFilter;
+                return matchesSearch && matchesWorkplace;
+              })
+              .map((log) => {
+                const currency = currencyForWorkplace(log.workplace);
+                const date = new Date(`${log.log_date}T12:00:00`);
+                const workplaceColor = colorForWorkplace(log.workplace);
+                return (
+                  <article
+                    key={log.id}
+                    className="grid grid-cols-[52px_minmax(0,1fr)] gap-3 rounded-xl border border-line bg-surface p-3 transition hover:border-brand/40 hover:bg-soft/40 sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:p-4"
+                  >
+                    <div className="flex h-14 flex-col items-center justify-center rounded-lg bg-soft text-center sm:h-16">
+                      <span className="text-[10px] font-semibold uppercase text-muted">{date.toLocaleDateString("en-US", { month: "short" })}</span>
+                      <span className="text-xl font-extrabold leading-tight text-ink">{date.getDate()}</span>
+                      <span className="text-[10px] text-muted">{date.toLocaleDateString("en-US", { weekday: "short" })}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${workplaceColor.dot}`} />
+                        <p className="min-w-0 truncate text-sm font-bold text-ink">{log.workplace}</p>
+                      </div>
+                      {log.notes && <p className="mt-1 line-clamp-2 break-words text-xs leading-5 text-muted">{log.notes}</p>}
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                        <span className="font-semibold text-ink">{log.classes} {log.classes === 1 ? "class" : "classes"}</span>
+                        <span>{log.rate_per_class ? `${formatMoney(log.rate_per_class, currency)}/class` : "Rate not set"}</span>
+                      </div>
+                    </div>
+                    <div className="col-span-2 flex items-center justify-between gap-3 border-t border-line pt-2 sm:col-span-1 sm:block sm:border-0 sm:pt-0 sm:text-right">
+                      <span className="text-xs text-muted sm:hidden">Income</span>
+                      <p className="text-sm font-extrabold tabular-nums text-ink sm:text-base">{formatMoney(log.income, currency)}</p>
+                    </div>
+                  </article>
+                );
+              })}
+            {monthlyLogs.filter((log) => {
               const term = searchTerm.toLowerCase().trim();
-
-              const matchesSearch =
-                !term ||
-                (log.workplace ?? "").toLowerCase().includes(term) ||
-                (log.notes ?? "").toLowerCase().includes(term) ||
-                log.log_date.includes(term);
-
-              const matchesWorkplace =
-                workplaceFilter === "All workplaces" ||
-                log.workplace === workplaceFilter;
-
-              return matchesSearch && matchesWorkplace;
-            })
-            .map((log) => (
-              <div
-                key={log.id}
-                className="grid items-center gap-3 p-4 sm:grid-cols-[80px_1fr_100px_100px_100px]"
-              >
-                <div>
-                  <p className="text-xs text-muted">
-                    {new Date(`${log.log_date}T12:00:00`).toLocaleDateString("en-US", {
-                      weekday: "short",
-                    })}
-                  </p>
-                  <p className="font-bold">
-                    {new Date(`${log.log_date}T12:00:00`).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-semibold">{log.workplace}</p>
-                  {log.notes && <Badge>{log.notes}</Badge>}
-                </div>
-                <p className="text-sm">{log.classes} classes</p>
-                <p className="text-sm text-muted">
-                  {log.rate_per_class ? `${formatMoney(log.rate_per_class, currencyForWorkplace(log.workplace))}/class` : "—"}
-                </p>
-                <p className="font-bold sm:text-right">{formatMoney(log.income, currencyForWorkplace(log.workplace))}</p>
+              const matchesSearch = !term || (log.workplace ?? "").toLowerCase().includes(term) || (log.notes ?? "").toLowerCase().includes(term) || log.log_date.includes(term);
+              return matchesSearch && (workplaceFilter === "All workplaces" || log.workplace === workplaceFilter);
+            }).length === 0 && (
+              <div className="rounded-xl border border-dashed border-line px-4 py-10 text-center">
+                <p className="text-sm font-semibold text-ink">No matching daily logs</p>
+                <p className="mt-1 text-xs text-muted">Try another search term or workplace filter.</p>
               </div>
-            ))}
+            )}
           </div>
         </Card>
       )}
