@@ -770,7 +770,6 @@ export function DailyLogPage() {
               </div>
             </div>
           )}
-          </div>
         </Card>
       )}
 
