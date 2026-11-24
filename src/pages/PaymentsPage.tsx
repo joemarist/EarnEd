@@ -348,6 +348,11 @@ export function PaymentsPage() {
     ),
   ].join("\n");
 
+  const kpiCards: Array<{ label: string; values: string[]; detail: string; Icon: typeof TrendingUp; warning: boolean }> = [
+    { label: "Total earned from logs", values: earnedTotal, detail: "Uses the saved income and historical class rates", Icon: TrendingUp, warning: false },
+    { label: "Payments received", values: receivedTotal, detail: payments.length + " payment record" + (payments.length === 1 ? "" : "s") + " saved", Icon: CalendarCheck, warning: false },
+    { label: "Outstanding on recorded periods", values: outstandingTotal, detail: "Calculated only for pay periods with a recorded payment", Icon: AlertCircle, warning: true },
+  ];
   if (loading) {
     return <div className="p-6 text-sm text-muted">Loading payments...</div>;
   }
@@ -389,28 +394,20 @@ export function PaymentsPage() {
       )}
 
       <section className="grid gap-4 sm:grid-cols-3">
-        {[
-          ["Total earned from logs", earnedTotal, "Uses the saved income and historical class rates", TrendingUp],
-          ["Payments received", receivedTotal, `${payments.length} payment record${payments.length === 1 ? "" : "s"} saved`, CalendarCheck],
-          ["Outstanding on recorded periods", outstandingTotal, "Calculated only for pay periods with a recorded payment", AlertCircle],
-        ].map(([label, values, detail, Icon], index) => (
-          <Card key={String(label)} className="p-5">
+        {kpiCards.map(({ label, values, detail, Icon, warning }) => (
+          <Card key={label} className="p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm text-muted">{String(label)}</p>
+                <p className="text-sm text-muted">{label}</p>
                 <div className="mt-2 space-y-1">
-                  {(values as string[]).length > 0 ? (
-                    (values as string[]).map((value) => <p key={value} className="text-xl font-bold">{value}</p>)
-                  ) : (
-                    <p className="text-2xl font-bold">—</p>
-                  )}
+                  {values.length > 0 ? values.map((value, index) => <p key={label + index} className="text-xl font-bold">{value}</p>) : <p className="text-2xl font-bold">—</p>}
                 </div>
               </div>
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${index === 2 ? "bg-amber-100 text-amber-700 dark:bg-amber-950" : "bg-brand-soft text-brand-dark"}`}>
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${warning ? "bg-amber-100 text-amber-700 dark:bg-amber-950" : "bg-brand-soft text-brand-dark"}`}>
                 <Icon size={19} />
               </span>
             </div>
-            <p className="mt-3 text-xs text-muted">{String(detail)}</p>
+            <p className="mt-3 text-xs text-muted">{detail}</p>
           </Card>
         ))}
       </section>
