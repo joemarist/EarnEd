@@ -368,11 +368,6 @@ export function DailyLogPage() {
     0
   );
   
-  const monthlyIncome = monthlyLogs.reduce(
-    (sum: number, log: any) => sum + (log.income ?? 0),
-    0
-  );
-  
   const groupedDayLogs = useMemo(() => {
     if (!viewingDayLogs) return [];
   
