@@ -15,6 +15,11 @@ import { supabase } from "../lib/supabase";
 
 export function DailyLogPage() {
   const [view, setView] = useState<"calendar" | "list">("calendar");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [workplaceFilter, setWorkplaceFilter] = useState("All workplaces");
+  const [currentMonth, setCurrentMonth] = useState(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  );
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,6 +45,8 @@ export function DailyLogPage() {
 
   const [adding, setAdding] = useState(false);
   const [viewingDayLogs, setViewingDayLogs] = useState<any[] | null>(null);
+  const [editingWorkplace, setEditingWorkplace] = useState<string | null>(null);
+  const [editedClasses, setEditedClasses] = useState(0);
   const [selectedDate, setSelectedDate] = useState("2026-11-24");
   const [selectedWorkplace, setSelectedWorkplace] = useState(workplaces[0]?.name ?? "");
   const [classCount, setClassCount] = useState(3);
@@ -110,7 +117,90 @@ export function DailyLogPage() {
     setSelectedWorkplace("");
   }
 
-  const days = Array.from({ length: 31 }, (_, index) => index + 1);
+  async function saveEditedClasses(group: any) {
+    if (!Number.isInteger(editedClasses) || editedClasses < 0) {
+      return;
+    }
+  
+    const originalLogs = group.logs;
+    const originalTotal = group.classes;
+  
+    // Keep existing class counts where possible.
+    // If the total is reduced, remove classes from later records first.
+    const updatedCounts = originalLogs.map((log: any) => log.classes ?? 0);
+  
+    let remaining = editedClasses;
+  
+    for (let i = 0; i < updatedCounts.length; i++) {
+      const kept = Math.min(updatedCounts[i], remaining);
+      updatedCounts[i] = kept;
+      remaining -= kept;
+    }
+  
+    // If the new total is higher, add the extra classes to the first record.
+    if (remaining > 0 && updatedCounts.length > 0) {
+      updatedCounts[0] += remaining;
+    }
+  
+    setSaving(true);
+    setSaveError("");
+  
+    for (let i = 0; i < originalLogs.length; i++) {
+      const log = originalLogs[i];
+      const newClasses = updatedCounts[i];
+      const newIncome = newClasses * (log.rate_per_class ?? 0);
+  
+      const { error } = await supabase
+        .from("daily_logs")
+        .update({
+          classes: newClasses,
+          income: newIncome,
+        })
+        .eq("id", log.id);
+  
+      if (error) {
+        setSaveError(error.message);
+        setSaving(false);
+        return;
+      }
+    }
+  
+    const updatedLogs = originalLogs.map((log: any, index: number) => ({
+      ...log,
+      classes: updatedCounts[index],
+      income: updatedCounts[index] * (log.rate_per_class ?? 0),
+    }));
+  
+    setLogs((previous) =>
+      previous.map((log) => {
+        const updated = updatedLogs.find((item: any) => item.id === log.id);
+        return updated ?? log;
+      })
+    );
+  
+    setViewingDayLogs((previous) =>
+      previous
+        ? previous.map((log) => {
+          const updated = updatedLogs.find((item: any) => item.id === log.id);
+            return updated ?? log;
+          })
+        : previous
+    );
+  
+    setEditingWorkplace(null);
+    setSaving(false);
+  }
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOffset = new Date(year, month, 1).getDay();
+
+  const days = Array.from(
+    { length: daysInMonth },
+    (_, index) => index + 1
+  );
   const logMap = useMemo(
     () =>
       Object.fromEntries(
@@ -119,18 +209,62 @@ export function DailyLogPage() {
     [logs]
   );
 
-  const logsByDay = useMemo(() => {
+  const logsByDate = useMemo(() => {
     return logs.reduce((groups, log) => {
-      const day = Number(log.log_date.split("-")[2]);
+      const date = log.log_date;
   
-      if (!groups[day]) {
-        groups[day] = [];
+      if (!groups[date]) {
+        groups[date] = [];
       }
   
-      groups[day].push(log);
+      groups[date].push(log);
       return groups;
-    }, {} as Record<number, any[]>);
+    }, {} as Record<string, any[]>);
   }, [logs]);
+
+  const monthlyLogs = logs.filter((log) =>
+    log.log_date.startsWith(
+      `${year}-${String(month + 1).padStart(2, "0")}`
+    )
+  );
+  
+  const monthlyClasses = monthlyLogs.reduce(
+    (sum: number, log: any) => sum + (log.classes ?? 0),
+    0
+  );
+  
+  const monthlyIncome = monthlyLogs.reduce(
+    (sum: number, log: any) => sum + (log.income ?? 0),
+    0
+  );
+  
+  const groupedDayLogs = useMemo(() => {
+    if (!viewingDayLogs) return [];
+  
+    const groups = viewingDayLogs.reduce(
+      (result: Record<string, any>, log: any) => {
+        const workplace = log.workplace || "Unknown workplace";
+  
+        if (!result[workplace]) {
+          result[workplace] = {
+            workplace,
+            classes: 0,
+            income: 0,
+            logs: [],
+          };
+        }
+  
+        result[workplace].classes += log.classes ?? 0;
+        result[workplace].income += log.income ?? 0;
+        result[workplace].logs.push(log);
+  
+        return result;
+      },
+      {}
+    );
+  
+    return Object.values(groups);
+  }, [viewingDayLogs]);
 
   if (loading) {
     return (
@@ -165,14 +299,42 @@ export function DailyLogPage() {
       />
       <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2">
-          <Button variant="secondary" className="h-10 w-10 px-0">
-            <ChevronLeft size={17} />
-          </Button>
-          <h2 className="min-w-32 text-center font-bold">May 2025</h2>
-          <Button variant="secondary" className="h-10 w-10 px-0">
+        <Button
+          variant="secondary"
+          className="h-10 w-10 px-0"
+          onClick={() =>
+            setCurrentMonth(
+              new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+            )
+          }
+        >
+          <ChevronLeft size={17} />
+        </Button>
+          <h2 className="min-w-32 text-center font-bold">
+            {currentMonth.toLocaleDateString("en-US", {
+              month: "long",
+              year: "numeric",
+            })}
+          </h2>
+          <Button
+            variant="secondary"
+            className="h-10 w-10 px-0"
+            onClick={() =>
+              setCurrentMonth(
+                new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+              )
+            }
+          >
             <ChevronRight size={17} />
           </Button>
-          <Button variant="ghost">
+          <Button
+            variant="ghost"
+            onClick={() =>
+              setCurrentMonth(
+                new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+              )
+            }
+          >
             <RotateCcw size={15} /> Today
           </Button>
         </div>
@@ -202,14 +364,15 @@ export function DailyLogPage() {
             ))}
           </div>
           <div className="grid grid-cols-7">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={`blank-${index}`}
-                className="min-h-22 border-b border-r border-line bg-soft/30 sm:min-h-29"
-              />
-            ))}
+          {Array.from({ length: firstDayOffset }).map((_, index) => (
+            <div
+              key={`blank-${index}`}
+              className="min-h-22 border-b border-r border-line bg-soft/30 sm:min-h-29"
+            />
+          ))}
             {days.map((day) => {
-              const dayLogs = logsByDay[day] ?? [];
+              const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+              const dayLogs = logsByDate[dateKey] ?? [];
               const totalClasses = dayLogs.reduce(
                 (sum: number, log: any) => sum + (log.classes ?? 0),
                 0
@@ -218,7 +381,11 @@ export function DailyLogPage() {
                 (sum: number, log: any) => sum + (log.income ?? 0),
                 0
               );
-              const isToday = day === 13;
+              const today = new Date();
+              const isToday =
+                year === today.getFullYear() &&
+                month === today.getMonth() &&
+                day === today.getDate();
               return (
                 <button
                   key={day}
@@ -226,9 +393,7 @@ export function DailyLogPage() {
                     if (dayLogs.length > 0) {
                       setViewingDayLogs(dayLogs);
                     } else {
-                      setSelectedDate(
-                        `2025-05-${String(day).padStart(2, "0")}`
-                      );
+                      setSelectedDate(dateKey);
                       setSelectedWorkplace(workplaces[0]?.name ?? "");
                       setClassCount(3);
                       setRemark("");
@@ -265,9 +430,13 @@ export function DailyLogPage() {
             })}
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 p-4 text-xs text-muted">
-            <span>
-              Month total: <b className="text-ink">18 classes · $227.50</b>
-            </span>
+          <span>
+            Month total:{" "}
+            <b className="text-ink">
+              {monthlyClasses} {monthlyClasses === 1 ? "class" : "classes"} ·{" "}
+              {money(monthlyIncome)}
+            </b>
+          </span>
             <span>Rates are applied by effective date</span>
           </div>
         </Card>
@@ -276,17 +445,43 @@ export function DailyLogPage() {
           <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 text-muted" size={16} />
-              <Input placeholder="Search remarks or workplaces" className="pl-9" />
+              <Input
+                placeholder="Search remarks or workplaces"
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <Select>
-              <option>All workplaces</option>
+            <Select
+              value={workplaceFilter}
+              onChange={(e) => setWorkplaceFilter(e.target.value)}
+            >
+              <option value="All workplaces">All workplaces</option>
               {workplaces.map((item) => (
-                <option key={item.id}>{item.name}</option>
+                <option key={item.id} value={item.name}>
+                  {item.name}
+                </option>
               ))}
             </Select>
           </div>
           <div className="divide-y divide-line">
-            {logs.map((log) => (
+          {logs
+            .filter((log) => {
+              const term = searchTerm.toLowerCase().trim();
+
+              const matchesSearch =
+                !term ||
+                (log.workplace ?? "").toLowerCase().includes(term) ||
+                (log.notes ?? "").toLowerCase().includes(term) ||
+                log.log_date.includes(term);
+
+              const matchesWorkplace =
+                workplaceFilter === "All workplaces" ||
+                log.workplace === workplaceFilter;
+
+              return matchesSearch && matchesWorkplace;
+            })
+            .map((log) => (
               <div
                 key={log.id}
                 className="grid items-center gap-3 p-4 sm:grid-cols-[80px_1fr_100px_100px_100px]"
@@ -338,28 +533,84 @@ export function DailyLogPage() {
             </p>
 
             <div className="space-y-3">
-              {viewingDayLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className="rounded-xl border border-line p-3"
-                >
-                  <p className="font-semibold">{log.workplace}</p>
-                  <p className="mt-1 text-sm">
-                    {log.classes} {log.classes === 1 ? "class" : "classes"}
-                  </p>
-                  <p className="text-sm text-muted">
-                    Rate: {money(log.rate_per_class)}/class
-                  </p>
-                  <p className="font-semibold text-brand">
-                    Income: {money(log.income)}
-                  </p>
+            {groupedDayLogs.map((group: any) => (
+              <div
+              key={group.workplace}
+              className="rounded-xl border border-line p-3"
+            >
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">{group.workplace}</p>
+            
+                {editingWorkplace !== group.workplace && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingWorkplace(group.workplace);
+                      setEditedClasses(group.classes);
+                    }}
+                    className="rounded-lg border border-line px-3 py-1 text-xs font-medium hover:bg-soft"
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+            
+              {editingWorkplace === group.workplace ? (
+                <div className="mt-3">
+                  <label className="text-sm font-medium">
+                    Total classes
+                    <Input
+                      type="number"
+                      min="0"
+                      value={editedClasses}
+                      onChange={(e) => setEditedClasses(Number(e.target.value))}
+                      className="mt-1"
+                    />
+                  </label>
+            
+                  <div className="mt-2 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingWorkplace(null)}
+                      className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium hover:bg-soft"
+                    >
+                      Cancel
+                    </button>
 
-                  {log.notes && (
-                    <p className="mt-2 text-sm text-muted">
-                      {log.notes}
-                    </p>
-                  )}
+                    <button
+                      type="button"
+                      onClick={() => saveEditedClasses(group)}
+                      disabled={saving}
+                      className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
+                    >
+                      {saving ? "Saving..." : "Save"}
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  <p className="mt-1 text-sm">
+                    {group.classes} {group.classes === 1 ? "class" : "classes"}
+                  </p>
+            
+                  <p className="font-semibold text-brand">
+                    Income: {money(group.income)}
+                  </p>
+                </>
+              )}
+            
+              {group.logs.some((log: any) => log.notes) && (
+                <div className="mt-2 space-y-1">
+                  {group.logs
+                    .filter((log: any) => log.notes)
+                    .map((log: any) => (
+                      <p key={log.id} className="text-sm text-muted">
+                        {log.notes}
+                      </p>
+                    ))}
+                </div>
+              )}
+            </div>
               ))}
             </div>
 
