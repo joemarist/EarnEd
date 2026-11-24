@@ -6,6 +6,7 @@ import {
   Check,
   ChevronDown,
   CircleDollarSign,
+  HeartHandshake,
   Menu,
   ShieldCheck,
   Sparkles,
@@ -17,6 +18,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { Brand } from "../components/Brand";
 import { Button, Card } from "../components/ui";
+import { SupportEarnEdModal } from "../components/SupportEarnEdModal";
 
 const features = [
   {
@@ -74,6 +76,7 @@ export function LandingPage() {
   const [mobileNav, setMobileNav] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
   const [profileUnwrapped, setProfileUnwrapped] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
 
   return (
     <div className="min-h-screen overflow-hidden bg-canvas text-ink">
@@ -95,6 +98,9 @@ export function LandingPage() {
             </a>
           </nav>
           <div className="hidden items-center gap-3 md:flex">
+            <button type="button" onClick={() => setShowSupport(true)} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-brand/25 bg-brand-soft px-3 text-sm font-semibold text-brand-dark transition hover:bg-brand/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 dark:text-brand">
+              <HeartHandshake size={16} /> Support EarnEd
+            </button>
             <Link to="/login" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-muted transition hover:bg-soft hover:text-ink">
               Sign in
             </Link>
@@ -126,6 +132,9 @@ export function LandingPage() {
                   {item === "how" ? "How it works" : item}
                 </a>
               ))}
+              <button type="button" onClick={() => { setMobileNav(false); setShowSupport(true); }} className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand/25 bg-brand-soft px-4 text-sm font-semibold text-brand-dark dark:text-brand">
+                <HeartHandshake size={17} /> Support EarnEd (optional)
+              </button>
               <Link to="/login" onClick={() => setMobileNav(false)} className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-dark px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#355f1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
                 Sign in to EarnEd
               </Link>
@@ -482,9 +491,15 @@ export function LandingPage() {
       <footer className="border-t border-line py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-sm text-muted sm:flex-row sm:px-6">
           <Brand />
-          <p>© {new Date().getFullYear()} EarnEd. Built for tutors everywhere.</p>
+          <div className="flex flex-col items-center gap-2 sm:items-end">
+            <p>© {new Date().getFullYear()} EarnEd. Built for tutors everywhere.</p>
+            <button type="button" onClick={() => setShowSupport(true)} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-muted transition hover:bg-soft hover:text-brand-dark dark:hover:text-brand">
+              <HeartHandshake size={14} /> Support this free project
+            </button>
+          </div>
         </div>
       </footer>
+      {showSupport && <SupportEarnEdModal onClose={() => setShowSupport(false)} />}
     </div>
   );
 }
