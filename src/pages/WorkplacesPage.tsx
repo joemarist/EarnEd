@@ -7,6 +7,7 @@ import {
   Pencil,
   Plus,
   RotateCcw,
+  CircleHelp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button, Card, Input, PageHeader, Select } from "../components/ui";
@@ -26,6 +27,12 @@ type Workplace = {
   payday: string;
   cutoff_rule: string;
   archived: boolean;
+  cutoff_day_of_week: number | null;
+  payday_type: "day_of_week" | "day_of_month" | "days_after_cutoff" | "no_fixed_date";
+  payday_day_of_week: number | null;
+  payday_day_of_month: number | null;
+  payday_offset_days: number | null;
+  payment_notes: string | null;
 };
 
 type WorkplaceFormValues = {
@@ -36,6 +43,12 @@ type WorkplaceFormValues = {
   schedule: string;
   payday: string;
   cutoff_rule: string;
+  cutoff_day_of_week: number | null;
+  payday_type: "day_of_week" | "day_of_month" | "days_after_cutoff" | "no_fixed_date";
+  payday_day_of_week: number | null;
+  payday_day_of_month: number | null;
+  payday_offset_days: number | null;
+  payment_notes: string | null;
 };
 
 const today = new Date().toISOString().slice(0, 10);
@@ -109,6 +122,12 @@ export function WorkplacesPage() {
       schedule: values.schedule,
       payday: values.payday,
       cutoff_rule: values.cutoff_rule,
+      cutoff_day_of_week: values.cutoff_day_of_week,
+      payday_type: values.payday_type,
+      payday_day_of_week: values.payday_day_of_week,
+      payday_day_of_month: values.payday_day_of_month,
+      payday_offset_days: values.payday_offset_days,
+      payment_notes: values.payment_notes,
     };
 
     if (existingItem) {
@@ -345,6 +364,46 @@ export function WorkplacesPage() {
   );
 }
 
+const weekdays = [
+  { label: "Monday", value: 1 },
+  { label: "Tuesday", value: 2 },
+  { label: "Wednesday", value: 3 },
+  { label: "Thursday", value: 4 },
+  { label: "Friday", value: 5 },
+  { label: "Saturday", value: 6 },
+  { label: "Sunday", value: 7 },
+];
+
+type PaydayType =
+  | "day_of_week"
+  | "day_of_month"
+  | "days_after_cutoff"
+  | "no_fixed_date";
+
+function HelpTip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <span className="group relative inline-flex">
+      <button
+        type="button"
+        aria-label="More information"
+        aria-expanded={open}
+        onClick={() => setOpen((previous) => !previous)}
+        className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full text-muted hover:bg-soft hover:text-brand"
+      >
+        <CircleHelp size={15} />
+      </button>
+      <span
+        role="tooltip"
+        className={\`absolute left-0 top-7 z-[90] w-64 rounded-xl border border-line bg-surface p-3 text-xs font-normal leading-relaxed text-ink shadow-xl \${open ? "block" : "hidden"} group-hover:block group-focus-within:block\`}
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
 function WorkplaceModal({
   item,
   close,
@@ -363,17 +422,56 @@ function WorkplaceModal({
   const [rateEffective, setRateEffective] = useState(
     item?.rate_effective ?? today,
   );
-  const [schedule, setSchedule] = useState(
-    item?.schedule ?? "Bi-weekly",
-  );
-  const [payday, setPayday] = useState(
-    item?.payday ?? "Friday after cutoff",
+  const [schedule, setSchedule] = useState(item?.schedule ?? "Weekly");
+  const [cutoffDay, setCutoffDay] = useState(
+    String(item?.cutoff_day_of_week ?? 7),
   );
   const [cutoffRule, setCutoffRule] = useState(
-    item?.cutoff_rule ?? "Every other Sunday",
+    item?.cutoff_rule ?? "End of month",
   );
+  const [paydayType, setPaydayType] = useState<PaydayType>(
+    item?.payday_type ?? "no_fixed_date",
+  );
+  const [paydayWeekday, setPaydayWeekday] = useState(
+    String(item?.payday_day_of_week ?? 5),
+  );
+  const [paydayMonthDay, setPaydayMonthDay] = useState(
+    String(item?.payday_day_of_month ?? 15),
+  );
+  const [paydayOffset, setPaydayOffset] = useState(
+    String(item?.payday_offset_days ?? 7),
+  );
+  const [paymentNotes, setPaymentNotes] = useState(item?.payment_notes ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const isWeeklySchedule = schedule === "Weekly" || schedule === "Bi-weekly";
+  const selectedCutoffDay = weekdays.find(
+    (day) => day.value === Number(cutoffDay),
+  )?.label ?? "Sunday";
+
+  function getPaydayDescription() {
+    if (paydayType === "day_of_week") {
+      const day = weekdays.find(
+        (option) => option.value === Number(paydayWeekday),
+      )?.label ?? "Friday";
+      return day + " after cutoff";
+    }
+    if (paydayType === "day_of_month") {
+      return "Day " + paydayMonthDay + " of each month";
+    }
+    if (paydayType === "days_after_cutoff") {
+      return paydayOffset + " days after cutoff";
+    }
+    return "No fixed payday";
+  }
+
+  function getCutoffDescription() {
+    if (isWeeklySchedule) {
+      return (schedule === "Weekly" ? "Every " : "Every other ") + selectedCutoffDay;
+    }
+    return cutoffRule;
+  }
 
   async function handleSave() {
     if (!name.trim()) {
@@ -391,6 +489,26 @@ function WorkplaceModal({
       return;
     }
 
+    if (
+      paydayType === "day_of_month" &&
+      (!Number.isInteger(Number(paydayMonthDay)) ||
+        Number(paydayMonthDay) < 1 ||
+        Number(paydayMonthDay) > 31)
+    ) {
+      setError("Please choose a payday between the 1st and 31st.");
+      return;
+    }
+
+    if (
+      paydayType === "days_after_cutoff" &&
+      (!Number.isInteger(Number(paydayOffset)) ||
+        Number(paydayOffset) < 0 ||
+        Number(paydayOffset) > 60)
+    ) {
+      setError("Please enter between 0 and 60 days after cut-off.");
+      return;
+    }
+
     setSaving(true);
     setError("");
 
@@ -401,8 +519,17 @@ function WorkplaceModal({
         rate: Number(rate),
         rate_effective: rateEffective,
         schedule,
-        payday,
-        cutoff_rule: cutoffRule,
+        payday: getPaydayDescription(),
+        cutoff_rule: getCutoffDescription(),
+        cutoff_day_of_week: isWeeklySchedule ? Number(cutoffDay) : null,
+        payday_type: paydayType,
+        payday_day_of_week:
+          paydayType === "day_of_week" ? Number(paydayWeekday) : null,
+        payday_day_of_month:
+          paydayType === "day_of_month" ? Number(paydayMonthDay) : null,
+        payday_offset_days:
+          paydayType === "days_after_cutoff" ? Number(paydayOffset) : null,
+        payment_notes: paymentNotes.trim() || null,
       },
       item,
     );
@@ -429,7 +556,7 @@ function WorkplaceModal({
           </h2>
 
           <p className="mt-1 text-sm text-muted">
-            Set the workplace's current rate and payment schedule.
+            Set this workplace's rate and payment arrangements.
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -478,45 +605,146 @@ function WorkplaceModal({
               />
             </label>
 
-            <label className="text-sm font-semibold">
-              Pay schedule
+            <div>
+              <div className="flex items-center text-sm font-semibold">
+                Pay schedule
+                <HelpTip text="How often this workplace calculates and sends your payment. Choose the schedule stated by your school or tutoring platform." />
+              </div>
               <Select
                 className="mt-2 w-full"
                 value={schedule}
                 onChange={(event) => setSchedule(event.target.value)}
               >
                 <option value="Weekly">Weekly</option>
-                <option value="Bi-weekly">Bi-weekly</option>
-                <option value="Semi-monthly">Semi-monthly</option>
+                <option value="Bi-weekly">Bi-weekly (every two weeks)</option>
+                <option value="Semi-monthly">Semi-monthly (twice a month)</option>
                 <option value="Monthly">Monthly</option>
               </Select>
-            </label>
+            </div>
 
-            <label className="text-sm font-semibold">
-              Payday
+            {isWeeklySchedule ? (
+              <div>
+                <div className="flex items-center text-sm font-semibold">
+                  Cut-off day
+                  <HelpTip text="The last day included in a payment period. For example, if your weekly cut-off is Sunday, classes from Monday through Sunday belong to that period." />
+                </div>
+                <Select
+                  className="mt-2 w-full"
+                  value={cutoffDay}
+                  onChange={(event) => setCutoffDay(event.target.value)}
+                >
+                  {weekdays.map((day) => (
+                    <option key={day.value} value={day.value}>
+                      {day.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center text-sm font-semibold">
+                  Cut-off arrangement
+                  <HelpTip text="For semi-monthly or monthly schedules, choose the date pattern your workplace uses to close each payment period." />
+                </div>
+                <Select
+                  className="mt-2 w-full"
+                  value={cutoffRule}
+                  onChange={(event) => setCutoffRule(event.target.value)}
+                >
+                  <option value="1st and 15th">1st and 15th</option>
+                  <option value="15th and last day">15th and last day</option>
+                  <option value="End of month">End of month</option>
+                </Select>
+              </div>
+            )}
+
+            <div className="sm:col-span-2">
+              <div className="flex items-center text-sm font-semibold">
+                Payday arrangement
+                <HelpTip text="Choose how the workplace determines the day it sends your payment. This is separate from the cut-off day." />
+              </div>
               <Select
                 className="mt-2 w-full"
-                value={payday}
-                onChange={(event) => setPayday(event.target.value)}
+                value={paydayType}
+                onChange={(event) =>
+                  setPaydayType(event.target.value as PaydayType)
+                }
               >
-                <option value="Friday after cutoff">Friday after cutoff</option>
-                <option value="15th and last day">15th and last day</option>
-                <option value="Last business day">Last business day</option>
+                <option value="day_of_week">A specific weekday</option>
+                <option value="day_of_month">A date of each month</option>
+                <option value="days_after_cutoff">A number of days after cut-off</option>
+                <option value="no_fixed_date">No fixed payday</option>
               </Select>
-            </label>
+            </div>
 
-            <label className="text-sm font-semibold">
-              Cutoff rule
-              <Select
-                className="mt-2 w-full"
-                value={cutoffRule}
-                onChange={(event) => setCutoffRule(event.target.value)}
-              >
-                <option value="Every other Sunday">Every other Sunday</option>
-                <option value="15th and last day">15th and last day</option>
-                <option value="End of month">End of month</option>
-              </Select>
+            {paydayType === "day_of_week" && (
+              <div className="sm:col-span-2">
+                <label className="text-sm font-semibold">
+                  Payday weekday
+                  <Select
+                    className="mt-2 w-full"
+                    value={paydayWeekday}
+                    onChange={(event) => setPaydayWeekday(event.target.value)}
+                  >
+                    {weekdays.map((day) => (
+                      <option key={day.value} value={day.value}>
+                        {day.label}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+              </div>
+            )}
+
+            {paydayType === "day_of_month" && (
+              <div className="sm:col-span-2">
+                <label className="text-sm font-semibold">
+                  Payday date (1–31)
+                  <Input
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={paydayMonthDay}
+                    onChange={(event) => setPaydayMonthDay(event.target.value)}
+                    className="mt-2"
+                  />
+                </label>
+              </div>
+            )}
+
+            {paydayType === "days_after_cutoff" && (
+              <div className="sm:col-span-2">
+                <label className="text-sm font-semibold">
+                  Days after cut-off
+                  <Input
+                    type="number"
+                    min="0"
+                    max="60"
+                    value={paydayOffset}
+                    onChange={(event) => setPaydayOffset(event.target.value)}
+                    className="mt-2"
+                  />
+                </label>
+              </div>
+            )}
+
+            <label className="text-sm font-semibold sm:col-span-2">
+              Payment notes (optional)
+              <textarea
+                value={paymentNotes}
+                onChange={(event) => setPaymentNotes(event.target.value)}
+                placeholder="e.g. Payment may be delayed on public holidays."
+                rows={3}
+                className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand focus:ring-3 focus:ring-brand/10"
+              />
             </label>
+          </div>
+
+          <div className="mt-4 rounded-xl bg-soft p-3 text-sm">
+            <p className="font-semibold">Payment summary</p>
+            <p className="mt-1 text-muted">
+              {schedule} · {getCutoffDescription()} cut-off · {getPaydayDescription()}
+            </p>
           </div>
 
           {error && (
