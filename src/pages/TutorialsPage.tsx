@@ -268,7 +268,7 @@ export function TutorialsPage() {
         description="A beginner-friendly library of trusted articles, practical teaching tips and video demonstrations to help you prepare for your first class and keep improving."
       />
 
-      <Card className="relative isolate overflow-hidden border-0 bg-deep p-6 text-white sm:p-8">
+      <div className="relative isolate overflow-hidden rounded-2xl bg-deep p-6 text-white shadow-card sm:p-8">
         <div className="pointer-events-none absolute -right-12 -top-16 -z-10 h-64 w-64 rounded-full bg-brand/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 right-1/3 -z-10 h-48 w-48 rounded-full bg-sky-400/10 blur-3xl" />
         <div className="max-w-2xl">
@@ -328,7 +328,7 @@ export function TutorialsPage() {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="p-5 sm:p-6">
