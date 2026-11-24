@@ -171,7 +171,7 @@ export function AppShell() {
               end={end}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${isActive ? "bg-brand text-white shadow-sm" : "text-muted hover:bg-soft hover:text-ink"}`
+                `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${isActive ? "bg-brand-dark text-white shadow-sm dark:bg-brand dark:text-[#14200f]" : "text-muted hover:bg-soft hover:text-ink"}`
               }
             >
               <Icon size={18} strokeWidth={2} />
@@ -183,7 +183,7 @@ export function AppShell() {
           <NavLink
             to="/app/account"
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${isActive ? "bg-brand text-white" : "text-muted hover:bg-soft"}`
+              `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${isActive ? "bg-brand-dark text-white dark:bg-brand dark:text-[#14200f]" : "text-muted hover:bg-soft"}`
             }
           >
             <Settings size={18} /> Settings & account
