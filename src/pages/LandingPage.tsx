@@ -113,8 +113,7 @@ export function LandingPage() {
             {mobileNav ? <X size={20} /> : <Menu size={20} />}
           </Button>
         </div>
-        {mobileNav && (
-          <div id="landing-mobile-navigation" className="border-t border-line bg-surface p-4 md:hidden">
+        <div id="landing-mobile-navigation" hidden={!mobileNav} className="border-t border-line bg-surface p-4 md:hidden">
             <nav aria-label="Mobile navigation" className="grid gap-1">
               {["features", "how", "about", "faq"].map((item) => (
                 <a
@@ -131,7 +130,6 @@ export function LandingPage() {
               </Link>
             </nav>
           </div>
-        )}
       </header>
 
       <main>
