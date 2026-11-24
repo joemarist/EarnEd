@@ -236,7 +236,7 @@ export function LandingPage() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
                   Next payday
                 </p>
-                <p className="mt-1 text-sm font-bold">LingoStar · Friday</p>
+                <p className="mt-1 text-sm font-bold">Example school · Friday</p>
               </div>
             </div>
           </div>
