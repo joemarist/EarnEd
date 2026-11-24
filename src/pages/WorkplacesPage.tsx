@@ -363,7 +363,7 @@ type PaydayType =
   | "day_of_week"
   | "day_of_month"
   | "days_after_cutoff"
-  | "no_fixed_date";
+  | "no_fixed_date"
   | "legacy";
 
 function HelpTip({ text }: { text: string }) {
