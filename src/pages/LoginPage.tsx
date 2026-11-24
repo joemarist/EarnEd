@@ -14,6 +14,13 @@ const passwordSchema = z.object({
 
 type AuthMode = "password" | "signup" | "forgot" | "verify" | "reset";
 
+const authHighlights = [
+  { icon: CalendarCheck2, title: "Log your classes", description: "Keep dates, class counts, rates, and notes organized." },
+  { icon: WalletCards, title: "Track every payday", description: "Compare expected earnings with actual payments." },
+  { icon: BarChart3, title: "Understand your income", description: "Review trends and export useful reports." },
+  { icon: Check, title: "Set goals with purpose", description: "Track progress using income from your teaching logs." },
+];
+
 export function LoginPage() {
   const [mode, setMode] = useState<AuthMode>(
     new URLSearchParams(window.location.search).get("mode") === "reset" ? "reset" : "password",
@@ -201,16 +208,11 @@ export function LoginPage() {
           <h2 className="mt-4 font-display text-4xl font-extrabold leading-tight xl:text-5xl">Know what you taught, what you earned, and what has been paid.</h2>
           <p className="mt-5 max-w-lg text-sm leading-7 text-white/65">EarnEd brings your workplaces, daily class logs, payment records, goals, and reports together—so you can spend less time reconciling notes and more time teaching.</p>
           <div className="mt-9 grid gap-4 sm:grid-cols-2">
-            {[
-              [CalendarCheck2, "Log your classes", "Keep dates, class counts, rates, and notes organized."],
-              [WalletCards, "Track every payday", "Compare expected earnings with actual payments."],
-              [BarChart3, "Understand your income", "Review trends and export useful reports."],
-              [Check, "Set goals with purpose", "Track progress using income from your teaching logs."],
-            ].map(([Icon, title, description]) => (
-              <div key={String(title)} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            {authHighlights.map(({ icon: Icon, title, description }) => (
+              <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <Icon size={19} className="text-brand" />
-                <h3 className="mt-3 text-sm font-bold">{String(title)}</h3>
-                <p className="mt-1 text-xs leading-5 text-white/55">{String(description)}</p>
+                <h3 className="mt-3 text-sm font-bold">{title}</h3>
+                <p className="mt-1 text-xs leading-5 text-white/55">{description}</p>
               </div>
             ))}
           </div>
