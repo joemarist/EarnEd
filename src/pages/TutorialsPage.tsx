@@ -14,7 +14,7 @@ import {
   Sparkles,
   Video,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Card, Input, PageHeader } from "../components/ui";
 
 type Resource = {
@@ -231,6 +231,15 @@ export function TutorialsPage() {
   const [contentType, setContentType] = useState<"articles" | "videos">("articles");
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+  const libraryRef = useRef<HTMLElement | null>(null);
+
+  const goToLibrary = (type: "articles" | "videos") => {
+    setContentType(type);
+    setCategory(type === "articles" ? "Starting out" : "All");
+    setQuery("");
+    setActiveVideo(null);
+    libraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const filteredArticles = useMemo(
     () =>
@@ -284,21 +293,13 @@ export function TutorialsPage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <button
-              onClick={() => {
-                setContentType("articles");
-                setCategory("Starting out");
-                setQuery("");
-              }}
+              onClick={() => goToLibrary("articles")}
               className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-dark px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110 dark:bg-brand dark:text-[#14200f]"
             >
               Explore beginner guides <ChevronRight size={17} />
             </button>
             <button
-              onClick={() => {
-                setContentType("videos");
-                setCategory("All");
-                setQuery("");
-              }}
+              onClick={() => goToLibrary("videos")}
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15"
             >
               <PlayCircle size={17} /> Watch tutorials
@@ -410,7 +411,7 @@ export function TutorialsPage() {
         </Card>
       </section>
 
-      <section className="mt-8">
+      <section ref={libraryRef} className="mt-8 scroll-mt-24">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-brand-dark dark:text-[#b8e986]">
