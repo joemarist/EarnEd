@@ -57,6 +57,8 @@ export function DailyLogPage() {
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [searchTerm, setSearchTerm] = useState("");
   const [workplaceFilter, setWorkplaceFilter] = useState("All workplaces");
+  const [listPage, setListPage] = useState(1);
+  const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
   const [currentMonth, setCurrentMonth] = useState(
     new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
@@ -394,6 +396,31 @@ export function DailyLogPage() {
     0
   );
   
+  const filteredListLogs = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return monthlyLogs
+      .filter((log) => {
+        const matchesSearch =
+          !term ||
+          (log.workplace ?? "").toLowerCase().includes(term) ||
+          (log.notes ?? "").toLowerCase().includes(term) ||
+          log.log_date.includes(term);
+        const matchesWorkplace =
+          workplaceFilter === "All workplaces" ||
+          log.workplace === workplaceFilter;
+        return matchesSearch && matchesWorkplace;
+      })
+      .sort((a, b) => b.log_date.localeCompare(a.log_date));
+  }, [monthlyLogs, searchTerm, workplaceFilter]);
+
+  const pageSize = 10;
+  const totalListPages = Math.max(1, Math.ceil(filteredListLogs.length / pageSize));
+  const safeListPage = Math.min(listPage, totalListPages);
+  const paginatedListLogs = filteredListLogs.slice(
+    (safeListPage - 1) * pageSize,
+    safeListPage * pageSize
+  );
+
   const groupedDayLogs = useMemo(() => {
     if (!viewingDayLogs) return [];
   
@@ -635,12 +662,12 @@ export function DailyLogPage() {
                 placeholder="Search remarks or workplaces"
                 className="pl-9"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); setListPage(1); }}
               />
             </div>
             <Select
               value={workplaceFilter}
-              onChange={(e) => setWorkplaceFilter(e.target.value)}
+              onChange={(e) => { setWorkplaceFilter(e.target.value); setListPage(1); }}
             >
               <option value="All workplaces">All workplaces</option>
               {workplaces.map((item) => (
@@ -650,62 +677,95 @@ export function DailyLogPage() {
               ))}
             </Select>
           </div>
-          <div className="space-y-3 p-3 sm:p-4">
-            {monthlyLogs
-              .filter((log) => {
-                const term = searchTerm.toLowerCase().trim();
-                const matchesSearch =
-                  !term ||
-                  (log.workplace ?? "").toLowerCase().includes(term) ||
-                  (log.notes ?? "").toLowerCase().includes(term) ||
-                  log.log_date.includes(term);
-                const matchesWorkplace =
-                  workplaceFilter === "All workplaces" ||
-                  log.workplace === workplaceFilter;
-                return matchesSearch && matchesWorkplace;
-              })
-              .map((log) => {
-                const currency = currencyForWorkplace(log.workplace);
-                const date = new Date(`${log.log_date}T12:00:00`);
-                const workplaceColor = colorForWorkplace(log.workplace);
-                return (
-                  <article
-                    key={log.id}
-                    className="grid grid-cols-[52px_minmax(0,1fr)] gap-3 rounded-xl border border-line bg-surface p-3 transition hover:border-brand/40 hover:bg-soft/40 sm:grid-cols-[64px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:p-4"
-                  >
-                    <div className="flex h-14 flex-col items-center justify-center rounded-lg bg-soft text-center sm:h-16">
-                      <span className="text-[10px] font-semibold uppercase text-muted">{date.toLocaleDateString("en-US", { month: "short" })}</span>
-                      <span className="text-xl font-extrabold leading-tight text-ink">{date.getDate()}</span>
-                      <span className="text-[10px] text-muted">{date.toLocaleDateString("en-US", { weekday: "short" })}</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
+            <p className="text-xs text-muted">
+              <span className="font-semibold text-ink">{filteredListLogs.length}</span>{" "}
+              {filteredListLogs.length === 1 ? "entry" : "entries"} found · newest first
+            </p>
+            <p className="text-xs text-muted">Showing up to {pageSize} per page</p>
+          </div>
+          <div className="space-y-2 p-3 sm:p-4">
+            {paginatedListLogs.map((log) => {
+              const currency = currencyForWorkplace(log.workplace);
+              const date = new Date(`${log.log_date}T12:00:00`);
+              const workplaceColor = colorForWorkplace(log.workplace);
+              const noteExpanded = Boolean(expandedNotes[log.id]);
+              return (
+                <article
+                  key={log.id}
+                  className="grid grid-cols-[48px_minmax(0,1fr)] gap-3 rounded-xl border border-line bg-surface px-3 py-3 transition hover:border-brand/40 sm:grid-cols-[56px_minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:px-4"
+                >
+                  <div className="flex h-12 flex-col items-center justify-center rounded-lg bg-soft text-center">
+                    <span className="text-[9px] font-semibold uppercase text-muted">{date.toLocaleDateString("en-US", { month: "short" })}</span>
+                    <span className="text-lg font-extrabold leading-tight text-ink">{date.getDate()}</span>
+                    <span className="text-[9px] text-muted">{date.toLocaleDateString("en-US", { weekday: "short" })}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${workplaceColor.dot}`} />
+                      <p className="min-w-0 truncate text-sm font-bold text-ink">{log.workplace}</p>
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <span className={`h-2 w-2 shrink-0 rounded-full ${workplaceColor.dot}`} />
-                        <p className="min-w-0 truncate text-sm font-bold text-ink">{log.workplace}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted">
+                      <span className="font-semibold text-ink">{log.classes} {log.classes === 1 ? "class" : "classes"}</span>
+                      <span>{log.rate_per_class ? `${formatMoney(log.rate_per_class, currency)}/class` : "Rate not set"}</span>
+                    </div>
+                    {log.notes && (
+                      <div className="mt-1">
+                        <button
+                          type="button"
+                          aria-expanded={noteExpanded}
+                          onClick={() => setExpandedNotes((previous) => ({ ...previous, [log.id]: !previous[log.id] }))}
+                          className="text-[11px] font-semibold text-brand hover:underline"
+                        >
+                          {noteExpanded ? "Hide note" : "View note"}
+                        </button>
+                        {noteExpanded && (
+                          <p className="mt-1 break-words rounded-lg bg-soft px-2.5 py-2 text-xs leading-5 text-muted">
+                            {log.notes}
+                          </p>
+                        )}
                       </div>
-                      {log.notes && <p className="mt-1 line-clamp-2 break-words text-xs leading-5 text-muted">{log.notes}</p>}
-                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-                        <span className="font-semibold text-ink">{log.classes} {log.classes === 1 ? "class" : "classes"}</span>
-                        <span>{log.rate_per_class ? `${formatMoney(log.rate_per_class, currency)}/class` : "Rate not set"}</span>
-                      </div>
-                    </div>
-                    <div className="col-span-2 flex items-center justify-between gap-3 border-t border-line pt-2 sm:col-span-1 sm:block sm:border-0 sm:pt-0 sm:text-right">
-                      <span className="text-xs text-muted sm:hidden">Income</span>
-                      <p className="text-sm font-extrabold tabular-nums text-ink sm:text-base">{formatMoney(log.income, currency)}</p>
-                    </div>
-                  </article>
-                );
-              })}
-            {monthlyLogs.filter((log) => {
-              const term = searchTerm.toLowerCase().trim();
-              const matchesSearch = !term || (log.workplace ?? "").toLowerCase().includes(term) || (log.notes ?? "").toLowerCase().includes(term) || log.log_date.includes(term);
-              return matchesSearch && (workplaceFilter === "All workplaces" || log.workplace === workplaceFilter);
-            }).length === 0 && (
+                    )}
+                  </div>
+                  <div className="col-span-2 flex items-center justify-between gap-3 border-t border-line pt-2 sm:col-span-1 sm:block sm:border-0 sm:pt-0 sm:text-right">
+                    <span className="text-[11px] text-muted sm:hidden">Income</span>
+                    <p className="text-sm font-extrabold tabular-nums text-ink">{formatMoney(log.income, currency)}</p>
+                  </div>
+                </article>
+              );
+            })}
+            {filteredListLogs.length === 0 && (
               <div className="rounded-xl border border-dashed border-line px-4 py-10 text-center">
                 <p className="text-sm font-semibold text-ink">No matching daily logs</p>
                 <p className="mt-1 text-xs text-muted">Try another search term or workplace filter.</p>
               </div>
             )}
+          </div>
+          {filteredListLogs.length > 0 && (
+            <div className="flex flex-col gap-3 border-t border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted">
+                Page <span className="font-semibold text-ink">{safeListPage}</span> of{" "}
+                <span className="font-semibold text-ink">{totalListPages}</span>
+                {" · "}Showing {(safeListPage - 1) * pageSize + 1}–{Math.min(safeListPage * pageSize, filteredListLogs.length)} of {filteredListLogs.length}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  disabled={safeListPage === 1}
+                  onClick={() => setListPage((page) => Math.max(1, page - 1))}
+                >
+                  <ChevronLeft size={15} /> Previous
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={safeListPage === totalListPages}
+                  onClick={() => setListPage((page) => Math.min(totalListPages, page + 1))}
+                >
+                  Next <ChevronRight size={15} />
+                </Button>
+              </div>
+            </div>
+          )}
           </div>
         </Card>
       )}
