@@ -511,10 +511,18 @@ export function ReportsPage() {
                       tickFormatter={(value) => Number(value).toLocaleString()}
                     />
                     <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--surface)",
+                        border: "1px solid var(--line)",
+                        borderRadius: "12px",
+                        color: "var(--ink)",
+                      }}
+                      labelStyle={{ color: "var(--ink)" }}
+                      itemStyle={{ color: "var(--ink)" }}
                       labelFormatter={(value) => monthLabel(String(value))}
                       formatter={(value) => formatMoney(Number(value), summary.currency)}
                     />
-                    <Legend />
+                    <Legend wrapperStyle={{ color: "var(--muted)" }} />
                     <Area type="monotone" dataKey="earned" name="Earned" stroke="#76BE3F" strokeWidth={2.5} fill={`url(#earnedFill-${summary.currency})`} />
                     <Area type="monotone" dataKey="received" name="Received" stroke="#2F7D6D" strokeWidth={2.5} fill={`url(#receivedFill-${summary.currency})`} />
                   </AreaChart>
