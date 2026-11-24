@@ -9,7 +9,7 @@ import {
   Target,
   Trash2,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button, Card, Input, PageHeader, Select } from "../components/ui";
 import { supabase } from "../lib/supabase";
 
@@ -134,7 +134,7 @@ export function GoalsPage() {
     }, 0);
   }
 
-  async function saveGoal(event: React.FormEvent<HTMLFormElement>) {
+  async function saveGoal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const title = String(form.get("title") ?? "").trim();
