@@ -9,9 +9,30 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Input, PageHeader, Select } from "../components/ui";
-import { workplaces } from "../data/mock";
-import { money } from "../lib/utils";
 import { supabase } from "../lib/supabase";
+
+type Workplace = {
+  id: string;
+  name: string;
+  currency: string;
+  rate: number;
+  rate_effective: string;
+  archived: boolean;
+};
+
+function formatMoney(value: number, currency: string) {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    }).format(value);
+  } catch {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(value);
+  }
+}
 
 export function DailyLogPage() {
   const [view, setView] = useState<"calendar" | "list">("calendar");
@@ -21,34 +42,67 @@ export function DailyLogPage() {
     new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
   const [logs, setLogs] = useState<any[]>([]);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
 
   useEffect(() => {
-    async function fetchLogs() {
-      const { data, error } = await supabase
-        .from("daily_logs")
-        .select("*")
-        .order("log_date", { ascending: true });
-  
-        if (error) {
-          console.error("Error fetching daily logs:", error.message);
-          setLoading(false);
+    let active = true;
+
+    async function loadPageData() {
+      setLoading(true);
+      setPageError("");
+      try {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError || !userData.user) {
+          if (active) setPageError("Please sign in to view your daily logs and workplaces.");
           return;
         }
-  
-      setLogs(data ?? []);
-      setLoading(false);
+
+        const [workplaceResult, logResult] = await Promise.all([
+          supabase
+            .from("workplaces")
+            .select("id, name, currency, rate, rate_effective, archived")
+            .eq("user_id", userData.user.id)
+            .eq("archived", false)
+            .order("created_at", { ascending: true }),
+          supabase
+            .from("daily_logs")
+            .select("*")
+            .eq("user_id", userData.user.id)
+            .order("log_date", { ascending: true }),
+        ]);
+
+        if (workplaceResult.error) throw new Error(workplaceResult.error.message);
+        if (logResult.error) throw new Error(logResult.error.message);
+        if (active) {
+          setWorkplaces((workplaceResult.data ?? []) as Workplace[]);
+          setLogs(logResult.data ?? []);
+        }
+      } catch (error) {
+        if (active) {
+          setPageError(error instanceof Error ? error.message : "We could not load your daily log data.");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
     }
-  
-    fetchLogs();
+
+    loadPageData();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const [adding, setAdding] = useState(false);
   const [viewingDayLogs, setViewingDayLogs] = useState<any[] | null>(null);
   const [editingWorkplace, setEditingWorkplace] = useState<string | null>(null);
   const [editedClasses, setEditedClasses] = useState(0);
-  const [selectedDate, setSelectedDate] = useState("2026-11-24");
-  const [selectedWorkplace, setSelectedWorkplace] = useState(workplaces[0]?.name ?? "");
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  });
+  const [selectedWorkplace, setSelectedWorkplace] = useState("");
   const [classCount, setClassCount] = useState(3);
   const [remark, setRemark] = useState("");
   const [saving, setSaving] = useState(false);
@@ -56,8 +110,24 @@ export function DailyLogPage() {
   const selectedWorkplaceInfo = workplaces.find(
     (item) => item.name === selectedWorkplace
   );
-  const estimatedRate = selectedWorkplaceInfo?.rate ?? 0;
+  const estimatedRate = Number(selectedWorkplaceInfo?.rate ?? 0);
   const estimatedIncome = classCount * estimatedRate;
+  const selectedCurrency = selectedWorkplaceInfo?.currency ?? "USD";
+
+  function currencyForWorkplace(name: string) {
+    return workplaces.find((workplace) => workplace.name === name)?.currency ?? "USD";
+  }
+
+  function formatIncomeSummary(records: any[]) {
+    const totals = records.reduce((result: Record<string, number>, log: any) => {
+      const currency = currencyForWorkplace(log.workplace);
+      result[currency] = (result[currency] ?? 0) + Number(log.income ?? 0);
+      return result;
+    }, {});
+    return Object.entries(totals)
+      .map(([currency, total]) => formatMoney(total, currency))
+      .join(" + ");
+  }
 
   async function saveQuickAdd() {
     if (!selectedDate || !selectedWorkplace || classCount < 0) {
@@ -121,95 +191,26 @@ export function DailyLogPage() {
       return;
     }
   
-    const { data: existingLogs, error: lookupError } = await supabase
-  .from("daily_logs")
-  .select("*")
-  .eq("user_id", userData.user.id)
-  .eq("log_date", selectedDate)
-  .eq("workplace", selectedWorkplace);
-
-if (lookupError) {
-  setSaveError(lookupError.message);
-  setSaving(false);
-  return;
-}
-
-let savedLog;
-
-if (existingLogs && existingLogs.length > 0) {
-  const existing = existingLogs[0];
-
-  const totalClasses =
-    existingLogs.reduce((sum, log) => sum + (log.classes ?? 0), 0) +
-    classCount;
-
-  const notes = [
-    ...new Set([
-      ...existingLogs.map((log) => log.notes).filter(Boolean),
-      remark.trim(),
-    ].filter(Boolean)),
-  ].join("\n") || null;
-
-  const { data, error } = await supabase
-    .from("daily_logs")
-    .update({
-      classes: totalClasses,
-      rate_per_class: rate,
-      income: totalClasses * rate,
-      notes,
-    })
-    .eq("id", existing.id)
-    .select()
-    .single();
-
-  if (error) {
-    setSaveError(error.message);
-    setSaving(false);
-    return;
-  }
-
-  savedLog = data;
-
-  const duplicateIds = existingLogs
-    .slice(1)
-    .map((log) => log.id);
-
-  if (duplicateIds.length > 0) {
-    const { error: deleteError } = await supabase
+    const { data: savedLog, error: insertError } = await supabase
       .from("daily_logs")
-      .delete()
-      .in("id", duplicateIds);
+      .insert({
+        user_id: userData.user.id,
+        log_date: selectedDate,
+        workplace: selectedWorkplace,
+        classes: classCount,
+        rate_per_class: rate,
+        income,
+        notes: remark.trim() || null,
+      })
+      .select()
+      .single();
 
-    if (deleteError) {
-      setSaveError(deleteError.message);
+    if (insertError) {
+      setSaveError(insertError.message);
       setSaving(false);
       return;
     }
-  }
-} else {
-  const { data, error } = await supabase
-    .from("daily_logs")
-    .insert({
-      user_id: userData.user.id,
-      log_date: selectedDate,
-      workplace: selectedWorkplace,
-      classes: classCount,
-      rate_per_class: rate,
-      income,
-      notes: remark.trim() || null,
-    })
-    .select()
-    .single();
 
-  if (error) {
-    setSaveError(error.message);
-    setSaving(false);
-    return;
-  }
-
-  savedLog = data;
-}
-  
     setLogs((previous) => [
       ...previous.filter(
         (log) =>
@@ -232,8 +233,12 @@ if (existingLogs && existingLogs.length > 0) {
       return;
     }
   
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
+      setSaveError("You must be logged in to edit daily logs.");
+      return;
+    }
     const originalLogs = group.logs;
-    const originalTotal = group.classes;
 
     if (editedClasses === 0) {
       setSaving(true);
@@ -244,6 +249,7 @@ if (existingLogs && existingLogs.length > 0) {
       const { error } = await supabase
         .from("daily_logs")
         .delete()
+        .eq("user_id", userData.user.id)
         .in("id", ids);
     
       if (error) {
@@ -298,7 +304,8 @@ if (existingLogs && existingLogs.length > 0) {
           classes: newClasses,
           income: newIncome,
         })
-        .eq("id", log.id);
+        .eq("id", log.id)
+        .eq("user_id", userData.user.id);
   
       if (error) {
         setSaveError(error.message);
@@ -439,6 +446,17 @@ if (existingLogs && existingLogs.length > 0) {
           </Button>
         }
       />
+      {pageError && (
+        <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+          <span>{pageError}</span>
+          <Button variant="secondary" onClick={() => window.location.reload()}>Try again</Button>
+        </div>
+      )}
+      {workplaces.length === 0 && !pageError && (
+        <Card className="mb-4 p-4 text-sm text-muted">
+          Add an active workplace in Workplaces &amp; Rates before recording classes.
+        </Card>
+      )}
       <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex items-center gap-2">
         <Button
@@ -563,7 +581,7 @@ if (existingLogs && existingLogs.length > 0) {
                       </p>
 
                       <p className="mt-0.5 hidden opacity-70 sm:block">
-                        {money(totalIncome)}
+                        {formatIncomeSummary(dayLogs)}
                       </p>
                     </div>
                   )}
@@ -576,7 +594,7 @@ if (existingLogs && existingLogs.length > 0) {
             Month total:{" "}
             <b className="text-ink">
               {monthlyClasses} {monthlyClasses === 1 ? "class" : "classes"} ·{" "}
-              {money(monthlyIncome)}
+              {formatIncomeSummary(monthlyLogs)}
             </b>
           </span>
             <span>Rates are applied by effective date</span>
@@ -647,9 +665,9 @@ if (existingLogs && existingLogs.length > 0) {
                 </div>
                 <p className="text-sm">{log.classes} classes</p>
                 <p className="text-sm text-muted">
-                  {log.rate_per_class ? `${money(log.rate_per_class)}/class` : "—"}
+                  {log.rate_per_class ? `${formatMoney(log.rate_per_class, currencyForWorkplace(log.workplace))}/class` : "—"}
                 </p>
-                <p className="font-bold sm:text-right">{money(log.income)}</p>
+                <p className="font-bold sm:text-right">{formatMoney(log.income, currencyForWorkplace(log.workplace))}</p>
               </div>
             ))}
           </div>
@@ -736,7 +754,7 @@ if (existingLogs && existingLogs.length > 0) {
                   </p>
             
                   <p className="font-semibold text-brand">
-                    Income: {money(group.income)}
+                    Income: {formatMoney(group.income, currencyForWorkplace(group.workplace))}
                   </p>
                 </>
               )}
@@ -848,16 +866,16 @@ if (existingLogs && existingLogs.length > 0) {
                 </div>
               )}
               <div className="mt-4 rounded-xl bg-brand-soft p-3 text-sm text-brand-dark dark:text-brand">
-                <b>Estimated income: {money(estimatedIncome)}</b>
+                <b>Estimated income: {formatMoney(estimatedIncome, selectedCurrency)}</b>
                 <span className="float-right text-xs">
-                  at {money(estimatedRate)}/class
+                  at {formatMoney(estimatedRate, selectedCurrency)}/class
                 </span>
               </div>
               <div className="mt-5 flex justify-end gap-2">
                 <Button variant="ghost" onClick={() => setAdding(false)}>
                   Cancel
                 </Button>
-                <Button onClick={saveQuickAdd} disabled={saving}>
+                <Button onClick={saveQuickAdd} disabled={saving || workplaces.length === 0}>
                   {saving ? "Saving..." : "Save classes"}
                 </Button>
               </div>
