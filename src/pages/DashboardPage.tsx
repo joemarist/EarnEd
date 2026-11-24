@@ -429,6 +429,14 @@ export function DashboardPage() {
                     <XAxis dataKey="month" tickFormatter={monthLabel} axisLine={false} tickLine={false} tick={{ fill: "var(--muted)", fontSize: 11 }} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--muted)", fontSize: 11 }} width={48} />
                     <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--surface)",
+                        border: "1px solid var(--line)",
+                        borderRadius: "12px",
+                        color: "var(--ink)",
+                      }}
+                      labelStyle={{ color: "var(--ink)" }}
+                      itemStyle={{ color: "var(--ink)" }}
                       labelFormatter={(value) => {
                         const [year, month] = String(value).split("-").map(Number);
                         return new Date(year, month - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
