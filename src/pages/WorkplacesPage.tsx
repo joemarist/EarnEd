@@ -396,7 +396,7 @@ function HelpTip({ text }: { text: string }) {
       </button>
       <span
         role="tooltip"
-        className={\`absolute left-0 top-7 z-[90] w-64 rounded-xl border border-line bg-surface p-3 text-xs font-normal leading-relaxed text-ink shadow-xl \${open ? "block" : "hidden"} group-hover:block group-focus-within:block\`}
+        className={`absolute left-0 top-7 z-[90] w-64 rounded-xl border border-line bg-surface p-3 text-xs font-normal leading-relaxed text-ink shadow-xl ${open ? "block" : "hidden"} group-hover:block group-focus-within:block`}
       >
         {text}
       </span>
