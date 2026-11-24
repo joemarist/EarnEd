@@ -568,7 +568,7 @@ export function PaymentsPage() {
           <div>
             <h3 className="font-bold text-amber-900 dark:text-amber-200">How reconciliation works</h3>
             <p className="mt-1 text-sm leading-6 text-amber-800/80 dark:text-amber-200/70">
-              Choose the exact start and end dates shown by your workplace when recording a payment. Expected pay is summed from your Daily Logs for those dates. You can record multiple payments for the same period; each one reduces the remaining balance.
+              Choose the exact start and end dates shown by your workplace when recording a payment. Expected pay is summed from your Daily Logs for those dates. You can record more than one partial payment for the same period, but the combined amount cannot exceed the income earned. Once the balance reaches zero, the period is locked against additional payments.
             </p>
             <p className="mt-2 text-xs leading-5 text-amber-800/80 dark:text-amber-200/70">
               Period dates are entered explicitly rather than guessed from the schedule, because bi-weekly schedules need a confirmed cycle anchor date.
@@ -617,7 +617,7 @@ export function PaymentsPage() {
                 <label className="text-sm font-semibold">
                   Amount received
                   <Input type="number" min="0.01" max={remainingForSelectedPeriod.toFixed(2)} step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="mt-2" disabled={periodAlreadyPaid || expectedForSelectedPeriod <= 0 || !periodStart || !periodEnd || periodEnd < periodStart} />
-                  {selectedWorkplace && <span className="mt-1 block text-xs font-normal text-muted">Currency: {selectedWorkplace.currency}</span>}
+                  {selectedWorkplace && <span className="mt-1 block text-xs font-normal text-muted">Currency: {selectedWorkplace.currency} · Maximum allowed: {formatMoney(remainingForSelectedPeriod, selectedWorkplace.currency)}</span>}
                 </label>
                 <label className="text-sm font-semibold">
                   Date received
