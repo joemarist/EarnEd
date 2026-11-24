@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CircleDollarSign,
   Goal,
+  HeartHandshake,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -20,6 +21,7 @@ import { supabase } from "../lib/supabase";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router";
 import { Brand } from "./Brand";
 import { Button } from "./ui";
+import { SupportEarnEdModal } from "./SupportEarnEdModal";
 
 const primaryNav = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -76,6 +78,7 @@ export function AppShell() {
   const [hasSession, setHasSession] = useState(false);
   const [userFirstName, setUserFirstName] = useState("User");
   const [userAvatar, setUserAvatar] = useState("");
+  const [showSupport, setShowSupport] = useState(false);
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
   const location = useLocation();
   const safeTimezone = (() => {
@@ -90,6 +93,24 @@ export function AppShell() {
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!hasSession) return;
+    try {
+      if (localStorage.getItem("earned-support-prompt-seen") === "1") return;
+    } catch {
+      // The persistent Support button remains available if storage is restricted.
+    }
+    const timer = window.setTimeout(() => {
+      setShowSupport(true);
+      try {
+        localStorage.setItem("earned-support-prompt-seen", "1");
+      } catch {
+        // Do not block app access when browser storage is unavailable.
+      }
+    }, 1800);
+    return () => window.clearTimeout(timer);
+  }, [hasSession]);
 
   useEffect(() => {
     async function checkSession() {
@@ -173,6 +194,9 @@ export function AppShell() {
           ))}
         </nav>
         <div className="space-y-1 border-t border-line pt-3">
+          <button type="button" onClick={() => setShowSupport(true)} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-brand-dark transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 dark:text-brand">
+            <HeartHandshake size={18} /> Support EarnEd (optional)
+          </button>
           <NavLink
             to="/app/account"
             className={({ isActive }) =>
@@ -207,6 +231,9 @@ export function AppShell() {
             <HeaderGreeting timezone={safeTimezone} firstName={userFirstName} />
           </div>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <Button variant="ghost" className="h-10 w-10 shrink-0 border border-line bg-surface px-0 shadow-sm hover:bg-soft" onClick={() => setShowSupport(true)} aria-label="Support EarnEd" title="Support EarnEd (optional)">
+              <HeartHandshake size={19} />
+            </Button>
             <LiveClock timezone={safeTimezone} />
             <ThemeButton />
             <NavLink
@@ -250,6 +277,7 @@ export function AppShell() {
           More
         </button>
       </nav>
+      {showSupport && <SupportEarnEdModal onClose={() => setShowSupport(false)} />}
     </div>
   );
 }
