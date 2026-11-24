@@ -544,7 +544,7 @@ export function TutorialsPage() {
                             className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-300 group-hover:scale-105 group-hover:opacity-90"
                           />
                           <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/10" />
-                          <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white shadow-xl transition group-hover:scale-110">
+                          <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-brand text-[#14200f] shadow-xl transition group-hover:scale-110">
                             <Play fill="currentColor" size={22} />
                           </span>
                           <span className="absolute bottom-3 left-4 right-4 text-left text-xs font-semibold text-white/90">
