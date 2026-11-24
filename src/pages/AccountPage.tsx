@@ -308,7 +308,7 @@ export function AccountPage() {
 
           <Card className="p-5 sm:p-6">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950"><Wallet size={19} /></span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"><Wallet size={19} /></span>
               <div>
                 <h2 className="font-bold">Reminder preferences</h2>
                 <p className="text-xs text-muted">Choose which reminders you would like EarnEd to support</p>
@@ -344,7 +344,7 @@ export function AccountPage() {
 
           <Card className="p-5 sm:p-6">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950"><LockKeyhole size={19} /></span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"><LockKeyhole size={19} /></span>
               <div>
                 <h2 className="font-bold">Password & security</h2>
                 <p className="text-xs text-muted">Change the password used to sign in</p>
