@@ -1,4 +1,4 @@
-import { AlertCircle, CalendarCheck, Download, Plus, RefreshCw, TrendingUp } from "lucide-react";
+import { AlertCircle, CalendarCheck, ChevronDown, ChevronRight, Download, Plus, RefreshCw, Search, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Input, PageHeader, Select } from "../components/ui";
 import { supabase } from "../lib/supabase";
@@ -87,6 +87,10 @@ export function PaymentsPage() {
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [selected, setSelected] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [expandedPeriods, setExpandedPeriods] = useState<string[]>([]);
   const [recording, setRecording] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -171,6 +175,18 @@ export function PaymentsPage() {
     }, 0);
   }, [logs, selectedWorkplace, periodStart, periodEnd]);
 
+  const receivedForSelectedPeriod = useMemo(() => {
+    if (!selectedWorkplace || !periodStart || !periodEnd || periodEnd < periodStart) return 0;
+    return payments.reduce((total, payment) => {
+      const sameWorkplace = payment.workplace_id === selectedWorkplace.id || (!payment.workplace_id && payment.workplace_name === selectedWorkplace.name);
+      const samePeriod = payment.period_start === periodStart && payment.period_end === periodEnd;
+      return sameWorkplace && samePeriod ? total + Number(payment.amount ?? 0) : total;
+    }, 0);
+  }, [payments, selectedWorkplace, periodStart, periodEnd]);
+
+  const remainingForSelectedPeriod = Math.max(expectedForSelectedPeriod - receivedForSelectedPeriod, 0);
+  const periodAlreadyPaid = expectedForSelectedPeriod > 0 && remainingForSelectedPeriod <= 0.005;
+
   const periodSummaries = useMemo(() => {
     const groups = new Map<string, PeriodSummary>();
 
@@ -227,10 +243,20 @@ export function PaymentsPage() {
       .sort((a, b) => b.end.localeCompare(a.end));
   }, [payments, logs, workplaces]);
 
-  const filteredPeriods =
-    selected === "all"
-      ? periodSummaries
-      : periodSummaries.filter((item) => item.workplaceId === selected);
+  const filteredPeriods = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return periodSummaries.filter((item) => {
+      const matchesWorkplace = selected === "all" || item.workplaceId === selected;
+      const matchesStatus = statusFilter === "all" || item.status.toLowerCase() === statusFilter;
+      const matchesSearch = !query || item.workplace.toLowerCase().includes(query) || item.payments.some((payment) => [payment.reference_number, payment.payment_method, payment.notes].some((value) => value?.toLowerCase().includes(query)));
+      return matchesWorkplace && matchesStatus && matchesSearch;
+    });
+  }, [periodSummaries, selected, statusFilter, searchTerm]);
+
+  useEffect(() => { setCurrentPage(1); }, [selected, statusFilter, searchTerm]);
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(filteredPeriods.length / pageSize));
+  const paginatedPeriods = filteredPeriods.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const totalsByCurrency = useMemo(() => {
     const totals = new Map<string, { earned: number; received: number; outstanding: number }>();
@@ -298,6 +324,18 @@ export function PaymentsPage() {
       setSaveError("Please select the date you received the payment.");
       return;
     }
+    if (expectedForSelectedPeriod <= 0) {
+      setSaveError("There is no recorded Daily Logs income for this workplace and date range. Check the period dates.");
+      return;
+    }
+    if (periodAlreadyPaid) {
+      setSaveError("This pay period is already fully paid. You cannot add another payment to it.");
+      return;
+    }
+    if (numericAmount > remainingForSelectedPeriod + 0.005) {
+      setSaveError("The amount is higher than the remaining balance of " + formatMoney(remainingForSelectedPeriod, selectedWorkplace.currency) + ". Please check the amount.");
+      return;
+    }
 
     setSaving(true);
     setSaveError("");
@@ -305,6 +343,19 @@ export function PaymentsPage() {
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData.user) throw new Error("You must be signed in to record a payment.");
+
+      const { data: existingPayments, error: existingError } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("user_id", userData.user.id)
+        .eq("workplace_id", selectedWorkplace.id)
+        .eq("period_start", periodStart)
+        .eq("period_end", periodEnd);
+      if (existingError) throw new Error(existingError.message);
+      const latestReceived = (existingPayments ?? []).reduce((total, item) => total + Number(item.amount ?? 0), 0);
+      const latestRemaining = Math.max(expectedForSelectedPeriod - latestReceived, 0);
+      if (latestRemaining <= 0.005) throw new Error("This pay period has already been fully paid. Refresh to see the latest status.");
+      if (numericAmount > latestRemaining + 0.005) throw new Error("This amount is higher than the updated remaining balance of " + formatMoney(latestRemaining, selectedWorkplace.currency) + ". Please refresh and check again.");
 
       const { error } = await supabase.from("payments").insert({
         user_id: userData.user.id,
@@ -418,12 +469,19 @@ export function PaymentsPage() {
             <h2 className="font-bold">Pay-period reconciliation</h2>
             <p className="text-xs text-muted">Each row compares Daily Logs within the saved date range against all payments recorded for that range.</p>
           </div>
-          <Select value={selected} onChange={(event) => setSelected(event.target.value)} className="w-full sm:w-auto">
-            <option value="all">All workplaces</option>
-            {workplaces.map((item) => (
-              <option key={item.id} value={item.id}>{item.name}{item.archived ? " (archived)" : ""}</option>
-            ))}
-          </Select>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <label className="relative block">
+              <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+              <Input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search workplace or reference" className="pl-9" />
+            </label>
+            <Select value={selected} onChange={(event) => setSelected(event.target.value)} className="w-full">
+              <option value="all">All workplaces</option>
+              {workplaces.map((item) => <option key={item.id} value={item.id}>{item.name}{item.archived ? " (archived)" : ""}</option>)}
+            </Select>
+            <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="w-full">
+              <option value="all">All statuses</option><option value="paid">Paid</option><option value="partial">Partial</option><option value="unpaid">Unpaid</option>
+            </Select>
+          </div>
         </div>
 
         {filteredPeriods.length === 0 ? (
@@ -452,9 +510,9 @@ export function PaymentsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {filteredPeriods.map((item) => (
+                {paginatedPeriods.map((item) => (
                   <tr key={item.key} className="hover:bg-soft/60">
-                    <td className="px-5 py-4 font-semibold">{item.workplace}</td>
+                    <td className="px-5 py-4"><button type="button" className="inline-flex items-center gap-2 text-left font-semibold hover:text-brand" onClick={() => setExpandedPeriods((previous) => previous.includes(item.key) ? previous.filter((key) => key !== item.key) : [...previous, item.key])}>{expandedPeriods.includes(item.key) ? <ChevronDown size={15} /> : <ChevronRight size={15} />}{item.workplace}</button></td>
                     <td className="px-4 py-4 text-muted">{displayDate(item.start)} – {displayDate(item.end)}</td>
                     <td className="px-4 py-4">{formatMoney(item.expected, item.currency)}</td>
                     <td className="px-4 py-4">{formatMoney(item.received, item.currency)}</td>
@@ -462,11 +520,13 @@ export function PaymentsPage() {
                     <td className={`px-4 py-4 font-bold ${item.balance > 0 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(item.balance, item.currency)}</td>
                     <td className="px-4 py-4"><Badge status={item.status.toLowerCase()}>{item.status}</Badge></td>
                   </tr>
+                  {expandedPeriods.includes(item.key) && <tr key={item.key + "-details"} className="bg-soft/50"><td colSpan={7} className="px-5 py-4"><p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Payment entries ({item.payments.length})</p><div className="grid gap-2">{item.payments.slice().sort((a, b) => b.payment_date.localeCompare(a.payment_date)).map((payment) => <div key={payment.id} className="grid gap-1 rounded-lg border border-line bg-surface p-3 text-xs sm:grid-cols-4"><span><strong>Date:</strong> {displayDate(payment.payment_date)}</span><span><strong>Amount:</strong> {formatMoney(Number(payment.amount), payment.currency)}</span><span><strong>Method:</strong> {payment.payment_method || "—"}</span><span><strong>Reference:</strong> {payment.reference_number || "—"}</span>{payment.notes && <span className="sm:col-span-4"><strong>Notes:</strong> {payment.notes}</span>}</div>)}</div></td></tr>}
                 ))}
               </tbody>
             </table>
           </div>
         )}
+        {filteredPeriods.length > 0 && <div className="flex flex-col items-center justify-between gap-3 border-t border-line px-5 py-4 text-sm sm:flex-row"><p className="text-xs text-muted">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredPeriods.length)} of {filteredPeriods.length} pay periods</p><div className="flex items-center gap-2"><Button variant="secondary" disabled={currentPage === 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}>Previous</Button><span className="text-xs text-muted">Page {currentPage} of {pageCount}</span><Button variant="secondary" disabled={currentPage >= pageCount} onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}>Next</Button></div></div>}
       </Card>
 
       <Card className="mt-5 border-amber-200 bg-amber-50 p-5 dark:border-amber-900 dark:bg-amber-950/40">
@@ -517,12 +577,13 @@ export function PaymentsPage() {
                 <div className="rounded-xl bg-soft p-3 sm:col-span-2">
                   <p className="text-xs font-semibold text-muted">Expected from Daily Logs</p>
                   <p className="mt-1 text-lg font-bold">{selectedWorkplace ? formatMoney(expectedForSelectedPeriod, selectedWorkplace.currency) : "Select a workplace"}</p>
+                  <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs"><span className="text-muted">Already received: {selectedWorkplace ? formatMoney(receivedForSelectedPeriod, selectedWorkplace.currency) : "—"}</span><strong className={periodAlreadyPaid ? "text-emerald-600" : "text-amber-600"}>{selectedWorkplace ? (periodAlreadyPaid ? "Fully paid" : "Remaining: " + formatMoney(remainingForSelectedPeriod, selectedWorkplace.currency)) : ""}</strong></div>
                   <p className="mt-1 text-xs text-muted">Based on saved class income between the dates above.</p>
                 </div>
 
                 <label className="text-sm font-semibold">
                   Amount received
-                  <Input type="number" min="0.01" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="mt-2" />
+                  <Input type="number" min="0.01" max={remainingForSelectedPeriod.toFixed(2)} step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0.00" className="mt-2" disabled={periodAlreadyPaid || expectedForSelectedPeriod <= 0} />
                   {selectedWorkplace && <span className="mt-1 block text-xs font-normal text-muted">Currency: {selectedWorkplace.currency}</span>}
                 </label>
                 <label className="text-sm font-semibold">
@@ -552,11 +613,13 @@ export function PaymentsPage() {
                 </label>
               </div>
 
+              {periodAlreadyPaid && <div className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">This pay period is already fully paid. Another payment cannot be added.</div>}
+              {!periodAlreadyPaid && expectedForSelectedPeriod > 0 && Number(amount) > remainingForSelectedPeriod && <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">That amount is higher than the remaining balance of {selectedWorkplace ? formatMoney(remainingForSelectedPeriod, selectedWorkplace.currency) : "—"}.</div>}
               {saveError && <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{saveError}</div>}
 
               <div className="mt-5 flex justify-end gap-2">
                 <Button variant="ghost" onClick={() => setRecording(false)} disabled={saving}>Cancel</Button>
-                <Button onClick={savePayment} disabled={saving || workplaces.length === 0}>{saving ? "Saving..." : "Save payment"}</Button>
+                <Button onClick={savePayment} disabled={saving || workplaces.length === 0 || periodAlreadyPaid || expectedForSelectedPeriod <= 0 || !amount.trim() || Number(amount) <= 0 || Number(amount) > remainingForSelectedPeriod + 0.005}>{saving ? "Saving..." : "Save payment"}</Button>
               </div>
             </div>
           </Card>
