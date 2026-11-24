@@ -1,7 +1,6 @@
 import {
   CalendarRange,
   CheckCircle2,
-  CircleDollarSign,
   Clock3,
   Pencil,
   Plus,
