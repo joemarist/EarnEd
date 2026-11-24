@@ -107,13 +107,16 @@ export function LandingPage() {
             variant="ghost"
             className="h-10 w-10 px-0 md:hidden"
             onClick={() => setMobileNav(!mobileNav)}
+            aria-label={mobileNav ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileNav}
+            aria-controls="landing-mobile-navigation"
           >
             {mobileNav ? <X size={20} /> : <Menu size={20} />}
           </Button>
         </div>
         {mobileNav && (
-          <div className="border-t border-line bg-surface p-4 md:hidden">
-            <nav className="grid gap-1">
+          <div id="landing-mobile-navigation" className="border-t border-line bg-surface p-4 md:hidden">
+            <nav aria-label="Mobile navigation" className="grid gap-1">
               {["features", "how", "about", "faq"].map((item) => (
                 <a
                   key={item}
@@ -171,11 +174,11 @@ export function LandingPage() {
                     Start tracking for free <ArrowRight size={17} />
                   </Button>
                 </Link>
-                <Link to="/app">
+                <a href="#how">
                   <Button variant="secondary" className="w-full px-6 sm:w-auto">
-                    Open your workspace
+                    See how it works
                   </Button>
-                </Link>
+                </a>
               </div>
               <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
                 {["No credit card", "Unlimited workplaces", "Built for mobile"].map((item) => (
@@ -251,15 +254,15 @@ export function LandingPage() {
             <p className="text-xs font-bold uppercase tracking-[.18em] text-muted">
               One calm place for
             </p>
-            {["Cambly", "Preply", "NativeCamp", "Private students"].map((name) => (
-              <p key={name} className="font-display text-base font-bold text-muted/70">
+            {["Online language schools", "Tutoring platforms", "Independent tutors", "Private students"].map((name) => (
+              <p key={name} className="font-display text-sm font-bold text-muted/70 sm:text-base">
                 {name}
               </p>
             ))}
           </div>
         </section>
 
-        <section id="features" className="mx-auto max-w-7xl px-4 py-22 sm:px-6 sm:py-28">
+        <section id="features" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-22 sm:px-6 sm:py-28">
           <div className="mx-auto max-w-2xl text-center">
             <p className="section-kicker">Everything in one view</p>
             <h2 className="section-title">Your income, finally organized.</h2>
@@ -284,7 +287,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section id="how" className="bg-deep py-22 text-white sm:py-28">
+        <section id="how" className="scroll-mt-24 bg-deep py-22 text-white sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="max-w-2xl">
               <p className="section-kicker text-brand">Simple by design</p>
@@ -329,20 +332,46 @@ export function LandingPage() {
 
         <section
           id="about"
-          className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-22 sm:px-6 sm:py-28 lg:grid-cols-[.8fr_1.2fr]"
+          className="mx-auto grid max-w-7xl scroll-mt-24 items-center gap-12 px-4 py-22 sm:px-6 sm:py-28 lg:grid-cols-[.8fr_1.2fr]"
         >
-          <div className="relative mx-auto max-w-md">
-            <div className="absolute -inset-4 -rotate-3 rounded-[2rem] bg-brand-soft" />
-            <img
-              src="/developer-placeholder.png"
-              alt="Illustration representing the EarnEd workspace"
-              className="relative aspect-[4/5] w-full rounded-[1.75rem] object-cover object-top shadow-xl"
-            />
-            <div className="absolute -bottom-5 -right-4 rounded-2xl bg-surface p-4 shadow-xl">
-              <p className="text-xs font-bold uppercase tracking-wider text-brand">
-                Built with tutors
+          <div className="relative mx-auto w-full max-w-md">
+            <div className="absolute -inset-4 rotate-3 rounded-[2rem] bg-brand-soft dark:bg-brand/10" />
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-line bg-surface p-7 shadow-xl sm:p-9">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-brand text-3xl font-extrabold tracking-tight text-[#18352e]">
+                JN
+              </div>
+              <p className="mt-7 text-xs font-extrabold uppercase tracking-[.18em] text-brand-dark dark:text-brand">
+                The person behind EarnEd
               </p>
-              <p className="mt-1 text-sm font-semibold">Not just for them</p>
+              <h3 className="mt-2 font-display text-2xl font-extrabold tracking-tight">
+                Joemar Niño Abellana
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                ESL Tutor · IT Student · Web Developer
+              </p>
+              <div className="my-6 h-px bg-line" />
+              <div className="grid gap-4">
+                <div>
+                  <p className="text-sm font-bold">University of Southeastern Philippines</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">BS Information Technology · 2023–2027</p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Backend & full-stack projects</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">Laravel, PHP, MySQL, React, TypeScript, and database-driven applications</p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Based in Tagum, Philippines</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">Building practical tools from real teaching and project experience</p>
+                </div>
+              </div>
+              <div className="mt-7 flex flex-wrap gap-3 text-sm font-semibold">
+                <a href="https://joemarportfolio.netlify.app/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">
+                  Portfolio <ArrowRight size={14} className="inline" />
+                </a>
+                <a href="https://www.linkedin.com/in/joemar-abellana/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">
+                  LinkedIn <ArrowRight size={14} className="inline" />
+                </a>
+              </div>
             </div>
           </div>
           <div>
@@ -351,15 +380,18 @@ export function LandingPage() {
               A clearer view of the work behind every paycheck.
             </h2>
             <p className="mt-5 text-base leading-7 text-muted">
-              EarnEd brings your workplaces, class records, pay schedules, and income reports together in one place. It is designed to help independent tutors understand what they have earned and what they have received.
+              I created EarnEd from two sides of my own experience: teaching English online and studying Information Technology. As a tutor, I understand how class records, changing rates, multiple workplaces, and payment dates can become difficult to keep organized across separate notes and spreadsheets.
             </p>
             <p className="mt-4 text-base leading-7 text-muted">
-              Keep historical class rates, payment schedules, and financial records organized as your teaching work changes.
+              My work on database-driven systems—including the Balay Alumni Management System, MedStudy Space, and Sodarchives—has shaped how I approach the platform: keep information structured, make everyday tasks clear, and turn records into useful insights. EarnEd is my effort to make that kind of organization accessible to fellow ESL tutors.
+            </p>
+            <p className="mt-4 text-sm leading-6 text-muted">
+              It is an independently developed project that will continue to improve with real tutor needs and feedback.
             </p>
           </div>
         </section>
 
-        <section id="faq" className="border-t border-line bg-surface py-22 sm:py-28">
+        <section id="faq" className="scroll-mt-24 border-t border-line bg-surface py-22 sm:py-28">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-[.75fr_1.25fr]">
             <div>
               <p className="section-kicker">Questions, answered</p>
@@ -372,8 +404,11 @@ export function LandingPage() {
               {faqs.map(([question, answer], index) => (
                 <button
                   key={question}
-                  className="w-full py-5 text-left"
+                  type="button"
+                  className="w-full rounded-lg py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                   onClick={() => setOpenFaq(openFaq === index ? -1 : index)}
+                  aria-expanded={openFaq === index}
+                  aria-controls={`faq-answer-${index}`}
                 >
                   <span className="flex items-center justify-between gap-4 font-semibold">
                     {question}
@@ -383,7 +418,7 @@ export function LandingPage() {
                     />
                   </span>
                   {openFaq === index && (
-                    <span className="mt-3 block pr-8 text-sm leading-6 text-muted">{answer}</span>
+                    <span id={`faq-answer-${index}`} className="mt-3 block pr-8 text-sm leading-6 text-muted">{answer}</span>
                   )}
                 </button>
               ))}
@@ -400,7 +435,7 @@ export function LandingPage() {
               Join tutors who want a clearer, calmer way to understand their income.
             </p>
             <Link to="/login" className="mt-7 inline-block">
-              <Button className="bg-white px-6 text-brand-dark hover:bg-white/90">
+              <Button variant="light">
                 Get started free <ArrowRight size={17} />
               </Button>
             </Link>
