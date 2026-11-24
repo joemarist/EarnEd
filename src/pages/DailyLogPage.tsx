@@ -344,14 +344,6 @@ export function DailyLogPage() {
     { length: daysInMonth },
     (_, index) => index + 1
   );
-  const logMap = useMemo(
-    () =>
-      Object.fromEntries(
-        logs.map((log) => [Number(log.log_date.split("-")[2]), log])
-      ),
-    [logs]
-  );
-
   const logsByDate = useMemo(() => {
     return logs.reduce((groups, log) => {
       const date = log.log_date;
@@ -422,7 +414,7 @@ export function DailyLogPage() {
       <PageHeader
         eyebrow="Classes"
         title="Daily log"
-        description="Track every class and let EarnEd apply the right rate for that date."
+        description="Track classes by workplace, with each entry preserving the rate used when it was saved."
         action={
           <Button
             disabled={workplaces.length === 0}
@@ -532,10 +524,6 @@ export function DailyLogPage() {
                 (sum: number, log: any) => sum + (log.classes ?? 0),
                 0
               );
-              const totalIncome = dayLogs.reduce(
-                (sum: number, log: any) => sum + (log.income ?? 0),
-                0
-              );
               const today = new Date();
               const isToday =
                 year === today.getFullYear() &&
@@ -592,7 +580,7 @@ export function DailyLogPage() {
               {formatIncomeSummary(monthlyLogs)}
             </b>
           </span>
-            <span>Rates are applied by effective date</span>
+            <span>Each entry keeps its saved rate</span>
           </div>
         </Card>
       ) : (
