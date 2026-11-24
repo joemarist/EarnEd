@@ -522,6 +522,7 @@ export function PaymentsPage() {
                     <td className="px-4 py-4"><Badge status={item.status.toLowerCase()}>{item.status}</Badge></td>
                   </tr>
                   {expandedPeriods.includes(item.key) && <tr key={item.key + "-details"} className="bg-soft/50"><td colSpan={7} className="px-5 py-4"><p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Payment entries ({item.payments.length})</p><div className="grid gap-2">{item.payments.slice().sort((a, b) => b.payment_date.localeCompare(a.payment_date)).map((payment) => <div key={payment.id} className="grid gap-1 rounded-lg border border-line bg-surface p-3 text-xs sm:grid-cols-4"><span><strong>Date:</strong> {displayDate(payment.payment_date)}</span><span><strong>Amount:</strong> {formatMoney(Number(payment.amount), payment.currency)}</span><span><strong>Method:</strong> {payment.payment_method || "—"}</span><span><strong>Reference:</strong> {payment.reference_number || "—"}</span>{payment.notes && <span className="sm:col-span-4"><strong>Notes:</strong> {payment.notes}</span>}</div>)}</div></td></tr>}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
