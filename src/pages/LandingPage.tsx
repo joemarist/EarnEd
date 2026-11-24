@@ -43,8 +43,8 @@ const features = [
   },
   {
     icon: BellRing,
-    title: "Never miss a payday",
-    text: "See upcoming payday reminders and overdue payment alerts in one calm view.",
+    title: "Stay on top of pay cycles",
+    text: "Track each workplace's pay schedule and compare what you earned with what you received.",
   },
   {
     icon: ShieldCheck,
@@ -64,7 +64,7 @@ const faqs = [
   ],
   [
     "Can I import my spreadsheet?",
-    "Yes. The guided Excel and CSV import maps your existing columns before anything is saved.",
+    "Spreadsheet import is not available yet. You can enter classes in Daily Log and export your records from Reports or Settings & Account.",
   ],
   [
     "Does EarnEd handle taxes?",
@@ -175,7 +175,7 @@ export function LandingPage() {
                 </Link>
                 <Link to="/app">
                   <Button variant="secondary" className="w-full px-6 sm:w-auto">
-                    Explore the demo
+                    Open your workspace
                   </Button>
                 </Link>
               </div>
@@ -195,7 +195,7 @@ export function LandingPage() {
                 <div className="rounded-2xl bg-canvas p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-semibold text-muted">Good morning, Mia</p>
+                      <p className="text-xs font-semibold text-muted">Illustrative dashboard preview · sample data</p>
                       <h2 className="mt-1 text-xl font-bold">Your May overview</h2>
                     </div>
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-soft text-brand-dark">
@@ -350,16 +350,13 @@ export function LandingPage() {
           <div>
             <p className="section-kicker">Meet the developer</p>
             <h2 className="section-title text-left">
-              Hi, I’m Mia—teacher, builder, and spreadsheet reformer.
+              A clearer view of the work behind every paycheck.
             </h2>
             <p className="mt-5 text-base leading-7 text-muted">
-              This is editable placeholder copy for your story. Share how your background in ESL
-              teaching inspired EarnEd, the problem you kept seeing across schools, and why you care
-              about giving independent tutors more financial clarity.
+              EarnEd brings your workplaces, class records, pay schedules, and income reports together in one place. It is designed to help independent tutors understand what they have earned and what they have received.
             </p>
             <p className="mt-4 text-base leading-7 text-muted">
-              Add your teaching experience, technical background, credentials, and a personal note
-              about the community you hope to build.
+              As the product grows, this space can share the story behind EarnEd and the people it is built to support.
             </p>
             <div className="mt-7 flex gap-3">
               <a href="#" aria-label="LinkedIn">
