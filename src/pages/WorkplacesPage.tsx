@@ -51,7 +51,12 @@ type WorkplaceFormValues = {
   payment_notes: string | null;
 };
 
-const today = new Date().toISOString().slice(0, 10);
+function getLocalDateString() {
+  const now = new Date();
+  return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+}
+
+const today = getLocalDateString();
 
 function formatRate(rate: number, currency: string) {
   return new Intl.NumberFormat("en-US", {
@@ -69,26 +74,27 @@ export function WorkplacesPage() {
   const [savingArchive, setSavingArchive] = useState<string | null>(null);
 
   // Load the signed-in user's workplaces from Supabase.
-  useEffect(() => {
-    async function loadWorkplaces() {
-      setLoading(true);
-      setPageError("");
-
+  async function loadWorkplaces() {
+    setLoading(true);
+    setPageError("");
+    try {
       const { data, error } = await supabase
         .from("workplaces")
         .select("*")
         .order("created_at", { ascending: true });
-
       if (error) {
         setPageError(error.message);
-        setLoading(false);
         return;
       }
-
       setItems((data ?? []) as Workplace[]);
+    } catch {
+      setPageError("We could not connect to the database. Please try again.");
+    } finally {
       setLoading(false);
     }
+  }
 
+  useEffect(() => {
     loadWorkplaces();
   }, []);
 
@@ -135,6 +141,7 @@ export function WorkplacesPage() {
         .from("workplaces")
         .update(workplaceData)
         .eq("id", existingItem.id)
+        .eq("user_id", userData.user.id)
         .select()
         .single();
 
@@ -165,26 +172,27 @@ export function WorkplacesPage() {
   async function toggleArchive(item: Workplace) {
     setPageError("");
     setSavingArchive(item.id);
-
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
+      setPageError("You must be logged in to change a workplace.");
+      setSavingArchive(null);
+      return;
+    }
     const { data, error } = await supabase
       .from("workplaces")
       .update({ archived: !item.archived })
       .eq("id", item.id)
+      .eq("user_id", userData.user.id)
       .select()
       .single();
-
     if (error) {
       setPageError(error.message);
       setSavingArchive(null);
       return;
     }
-
     setItems((previous) =>
-      previous.map((workplace) =>
-        workplace.id === item.id ? data : workplace,
-      ),
+      previous.map((workplace) => workplace.id === item.id ? data : workplace),
     );
-
     setSavingArchive(null);
   }
 
@@ -206,8 +214,11 @@ export function WorkplacesPage() {
       />
 
       {pageError && (
-        <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-          {pageError}
+        <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+          <span>{pageError}</span>
+          <Button variant="secondary" className="min-h-8 px-3 text-xs" onClick={loadWorkplaces} disabled={loading}>
+            Try again
+          </Button>
         </div>
       )}
 
@@ -326,32 +337,6 @@ export function WorkplacesPage() {
         </section>
       )}
 
-      <Card className="mt-6 p-5">
-        <h2 className="font-bold">Defaults</h2>
-        <p className="mt-1 text-xs text-muted">
-          These are display defaults for now. They are not saved to your account yet.
-        </p>
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="text-sm font-semibold">
-            Default currency
-            <Select className="mt-2 w-full" defaultValue="USD">
-              <option value="USD">USD — US Dollar</option>
-              <option value="PHP">PHP — Philippine Peso</option>
-              <option value="EUR">EUR — Euro</option>
-            </Select>
-          </label>
-
-          <label className="text-sm font-semibold">
-            Timezone
-            <Select className="mt-2 w-full" defaultValue="Asia/Manila">
-              <option value="Asia/Manila">Asia/Manila (GMT+8)</option>
-              <option value="America/New_York">America/New_York</option>
-              <option value="Europe/London">Europe/London</option>
-            </Select>
-          </label>
-        </div>
-      </Card>
 
       {editing && (
         <WorkplaceModal
@@ -556,7 +541,7 @@ function WorkplaceModal({
           </h2>
 
           <p className="mt-1 text-sm text-muted">
-            Set this workplace's rate and payment arrangements.
+            Set this workplace's rate and payment arrangements. These settings belong only to your account.
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
