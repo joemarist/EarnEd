@@ -73,6 +73,7 @@ const faqs = [
 export function LandingPage() {
   const [mobileNav, setMobileNav] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
+  const [profileUnwrapped, setProfileUnwrapped] = useState(false);
 
   return (
     <div className="min-h-screen overflow-hidden bg-canvas text-ink">
@@ -327,43 +328,92 @@ export function LandingPage() {
           id="about"
           className="mx-auto grid max-w-7xl scroll-mt-24 items-center gap-12 px-4 py-22 sm:px-6 sm:py-28 lg:grid-cols-[.8fr_1.2fr]"
         >
-          <div className="relative mx-auto w-full max-w-md">
+          <div className="relative mx-auto w-full max-w-md [perspective:1400px]">
             <div className="absolute -inset-4 rotate-3 rounded-[2rem] bg-brand-soft dark:bg-brand/10" />
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-line bg-surface p-7 shadow-xl sm:p-9">
-              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-brand text-3xl font-extrabold tracking-tight text-[#18352e]">
-                JN
+            <div className="relative">
+              <div className="absolute inset-0 overflow-hidden rounded-[1.75rem] border border-line bg-surface shadow-xl">
+                <img
+                  src="/developer-placeholder.png"
+                  alt="Portrait of Joemar Niño Abellana"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#10251d]/90 via-[#10251d]/10 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-7 text-white sm:p-9">
+                  <p className="text-xs font-bold uppercase tracking-[.18em] text-white/75">
+                    The person behind EarnEd
+                  </p>
+                  <h3 className="mt-2 font-display text-2xl font-extrabold tracking-tight">
+                    Joemar Niño Abellana
+                  </h3>
+                  <p className="mt-1 text-sm text-white/80">
+                    ESL Tutor · IT Student · Web Developer
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setProfileUnwrapped(false)}
+                    tabIndex={profileUnwrapped ? 0 : -1}
+                    className={`mt-5 inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/40 bg-white/15 px-4 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${profileUnwrapped ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+                  >
+                    <ChevronDown size={16} className="rotate-180" />
+                    Wrap profile
+                  </button>
+                </div>
               </div>
-              <p className="mt-7 text-xs font-extrabold uppercase tracking-[.18em] text-brand-dark dark:text-brand">
-                The person behind EarnEd
-              </p>
-              <h3 className="mt-2 font-display text-2xl font-extrabold tracking-tight">
-                Joemar Niño Abellana
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                ESL Tutor · IT Student · Web Developer
-              </p>
-              <div className="my-6 h-px bg-line" />
-              <div className="grid gap-4">
-                <div>
-                  <p className="text-sm font-bold">University of Southeastern Philippines</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">BS Information Technology · 2023–2027</p>
+
+              <div
+                aria-hidden={profileUnwrapped}
+                inert={profileUnwrapped}
+                className="relative z-10 overflow-hidden rounded-[1.75rem] border border-line bg-surface p-7 shadow-xl transition-transform duration-700 ease-in-out motion-reduce:transition-none sm:p-9"
+                style={{
+                  transform: profileUnwrapped ? "rotateY(-105deg)" : "rotateY(0deg)",
+                  transformOrigin: "left center",
+                  transformStyle: "preserve-3d",
+                  backfaceVisibility: "hidden",
+                }}
+              >
+                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-brand text-3xl font-extrabold tracking-tight text-[#18352e]">
+                  JN
                 </div>
-                <div>
-                  <p className="text-sm font-bold">Backend & full-stack projects</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">Laravel, PHP, MySQL, React, TypeScript, and database-driven applications</p>
+                <p className="mt-7 text-xs font-extrabold uppercase tracking-[.18em] text-brand-dark dark:text-brand">
+                  The person behind EarnEd
+                </p>
+                <h3 className="mt-2 font-display text-2xl font-extrabold tracking-tight">
+                  Joemar Niño Abellana
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  ESL Tutor · IT Student · Web Developer
+                </p>
+                <div className="my-6 h-px bg-line" />
+                <div className="grid gap-4">
+                  <div>
+                    <p className="text-sm font-bold">University of Southeastern Philippines</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">BS Information Technology · 2023–2027</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">Backend & full-stack projects</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">Laravel, PHP, MySQL, React, TypeScript, and database-driven applications</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">Based in Tagum, Philippines</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">Building practical tools from real teaching and project experience</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold">Based in Tagum, Philippines</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">Building practical tools from real teaching and project experience</p>
+                <div className="mt-7 flex flex-wrap gap-3 text-sm font-semibold">
+                  <a href="https://joemarportfolio.netlify.app/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">
+                    Portfolio <ArrowRight size={14} className="inline" />
+                  </a>
+                  <a href="https://www.linkedin.com/in/joemar-abellana/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">
+                    LinkedIn <ArrowRight size={14} className="inline" />
+                  </a>
                 </div>
-              </div>
-              <div className="mt-7 flex flex-wrap gap-3 text-sm font-semibold">
-                <a href="https://joemarportfolio.netlify.app/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">
-                  Portfolio <ArrowRight size={14} className="inline" />
-                </a>
-                <a href="https://www.linkedin.com/in/joemar-abellana/" target="_blank" rel="noreferrer" className="text-brand-dark underline decoration-brand/40 underline-offset-4 hover:decoration-brand dark:text-brand">
-                  LinkedIn <ArrowRight size={14} className="inline" />
-                </a>
+                <button
+                  type="button"
+                  onClick={() => setProfileUnwrapped(true)}
+                  aria-pressed={profileUnwrapped}
+                  className="mt-7 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-dark px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#355f1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                >
+                  Reveal my photo <ArrowRight size={16} />
+                </button>
               </div>
             </div>
           </div>
