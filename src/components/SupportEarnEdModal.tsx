@@ -35,7 +35,7 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
         aria-modal="true"
         aria-labelledby="support-earned-title"
         aria-describedby="support-earned-description"
-        className="relative w-full max-w-2xl overflow-hidden rounded-[1.75rem] border border-line bg-surface text-ink shadow-2xl"
+        className="relative w-full max-w-3xl overflow-hidden rounded-[1.75rem] border border-line bg-surface text-ink shadow-2xl"
       >
         <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-brand/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-20 h-48 w-48 rounded-full bg-brand/10 blur-3xl" />
@@ -49,7 +49,7 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
           <X size={18} />
         </button>
 
-        <div className="relative grid gap-4 p-4 sm:grid-cols-[1fr_0.9fr] sm:gap-6 sm:p-6">
+        <div className="relative grid gap-4 p-4 md:grid-cols-[1.05fr_0.95fr] md:gap-7 md:p-7">
           <div className="flex min-w-0 flex-col justify-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-soft text-brand-dark dark:text-brand">
               <HeartHandshake size={23} />
@@ -61,7 +61,7 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
             <h2 id="support-earned-title" className="mt-1.5 max-w-sm font-display text-[1.65rem] font-extrabold leading-tight tracking-tight sm:text-3xl">
               Help keep EarnEd growing.
             </h2>
-            <p id="support-earned-description" className="mt-2 max-w-sm text-xs leading-[1.65] text-muted sm:text-sm">
+            <p id="support-earned-description" className="mt-2 max-w-md text-xs leading-[1.7] text-muted sm:text-sm">
               EarnEd is free for every tutor. If it has helped you, you can optionally chip in toward hosting and maintenance, helping me keep it running while I finish my studies.
             </p>
 
@@ -71,12 +71,12 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
               </p>
             </div>
 
-            <p className="mt-3 text-[11px] leading-5 text-muted">
+            <p className="mt-3 max-w-md text-[11px] leading-5 text-muted sm:text-xs">
               Thank you for being part of the EarnEd community. Your support is appreciated, never expected.
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-col items-center justify-center rounded-2xl border border-line bg-canvas p-3 sm:p-4">
+          <div className="flex min-w-0 flex-col items-center justify-center rounded-2xl border border-line bg-canvas p-3 sm:p-4 md:p-5">
             <div className="flex w-full items-center justify-between gap-2">
               <div>
                 <p className="text-sm font-extrabold">Support via GCash</p>
@@ -110,7 +110,7 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
         </div>
 
         <div className="relative flex items-center justify-between gap-3 border-t border-line bg-soft/40 px-4 py-3 sm:px-6">
-          <p className="hidden text-[11px] leading-4 text-muted sm:block">
+          <p className="hidden text-xs leading-5 text-muted sm:block">
             Thank you for helping keep this free tool available.
           </p>
           <button
