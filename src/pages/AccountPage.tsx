@@ -172,7 +172,12 @@ export function AccountPage() {
           contentType: file.type,
           upsert: true,
         });
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        if (uploadError.message.toLowerCase().includes("bucket not found")) {
+          throw new Error("The profile picture storage bucket is missing. Run the avatar storage SQL migration in your Supabase project's SQL Editor, then try uploading again.");
+        }
+        throw uploadError;
+      }
 
       const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(filePath);
       const nextAvatarUrl = `${publicData.publicUrl}?v=${Date.now()}`;
