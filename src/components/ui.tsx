@@ -6,16 +6,17 @@ export function Button({
   className,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "light";
 }) {
   return (
     <button
       className={cn(
         "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-50",
-        variant === "primary" && "bg-brand text-white shadow-sm hover:bg-brand-dark",
+        variant === "primary" && "bg-brand-dark text-white shadow-sm hover:bg-[#355f1d]",
         variant === "secondary" && "border border-line bg-surface text-ink hover:bg-soft",
         variant === "ghost" && "text-muted hover:bg-soft hover:text-ink",
         variant === "danger" && "bg-red-600 text-white hover:bg-red-700",
+        variant === "light" && "border border-white/70 bg-white text-brand-dark shadow-sm hover:bg-white/90",
         className,
       )}
       {...props}
