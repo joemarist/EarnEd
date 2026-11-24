@@ -584,8 +584,12 @@ export function DailyLogPage() {
               const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
               const dayLogs = logsByDate[dateKey] ?? [];
               const totalClasses = dayLogs.reduce((sum: number, log: any) => sum + (log.classes ?? 0), 0);
-              const workplaceGroups = [...new Set(dayLogs.map((log: any) => log.workplace).filter(Boolean))]
-                .map((name) => ({
+              const workplaceNames = [...new Set<string>(
+                dayLogs
+                  .map((log: any) => log.workplace)
+                  .filter((name: unknown): name is string => typeof name === "string" && name.length > 0),
+              )];
+              const workplaceGroups = workplaceNames.map((name) => ({
                   name,
                   classes: dayLogs.filter((log: any) => log.workplace === name)
                     .reduce((sum: number, log: any) => sum + (log.classes ?? 0), 0),
