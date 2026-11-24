@@ -19,6 +19,23 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  async function signInWithGoogle() {
+    setError("");
+    setIsLoading(true);
+  
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/app`,
+      },
+    });
+  
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -138,12 +155,13 @@ export function LoginPage() {
                   <Button
                     variant="secondary"
                     className="mt-8 w-full"
-                    disabled
+                    onClick={signInWithGoogle}
+                    disabled={isLoading}
                   >
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-blue-600">
                       G
                     </span>{" "}
-                    Continue with Google
+                    {isLoading ? "Connecting to Google..." : "Continue with Google"}
                   </Button>
                   <div className="my-6 flex items-center gap-3 text-xs text-muted">
                     <span className="h-px flex-1 bg-line" />
