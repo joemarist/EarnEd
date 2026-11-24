@@ -97,6 +97,56 @@ const articles: Resource[] = [
     url: "https://www.teachingenglish.org.uk/professional-development/teachers/using-digital-technologies/teaching-online",
     source: "British Council · TeachingEnglish",
   },
+  {
+    title: "Applying to online ESL platforms in the Philippines",
+    category: "Philippines",
+    summary:
+      "Review a Philippine-based platform's published tutor criteria, including age, English proficiency, equipment, internet, onboarding and TIN documentation. Requirements differ by company, so always verify the current official application page.",
+    readTime: "5–10 min",
+    level: "Beginner",
+    url: "https://tutor.rarejob.com.ph/site/faqs",
+    source: "RareJob Philippines · Official tutor FAQ",
+  },
+  {
+    title: "TESDA's ESL competency standards: beginner A1–A2",
+    category: "Philippines",
+    summary:
+      "Read the official TESDA competency standards document for beginner ESL. It explains the training framework and trainer qualifications; it is not a universal hiring requirement for every online tutoring platform.",
+    readTime: "Reference document",
+    level: "Reference",
+    url: "https://tesda.gov.ph/Downloadables/CS/CS-ESL-BEGINNER-A1-and-A2-LEVEL.pdf",
+    source: "TESDA · Official competency standards",
+  },
+  {
+    title: "BIR registration checklist for freelancers and professionals",
+    category: "Philippines",
+    summary:
+      "See the BIR's 2025 documentary checklist for self-employed individuals, including professionals and freelancers, and its ORUS online registration route. Confirm which taxpayer classification and obligations apply to your situation with the BIR.",
+    readTime: "Official checklist",
+    level: "Money & records",
+    url: "https://bir-cdn.bir.gov.ph/BIR/pdf/CDR%20-%202025.pdf",
+    source: "Bureau of Internal Revenue · 2025",
+  },
+  {
+    title: "Prepare a reliable home teaching setup in the Philippines",
+    category: "Philippines",
+    summary:
+      "Use a laptop or desktop, a clear microphone, front-facing light, a quiet background and stable internet. Consider a backup mobile-data connection and power option for local outages; check the exact technical standards of each platform.",
+    readTime: "5 min",
+    level: "Beginner",
+    url: "https://tutor.rarejob.com.ph/site/faqs",
+    source: "EarnEd guide · Check platform requirements",
+  },
+  {
+    title: "Plan your tutoring schedule using Philippine time",
+    category: "Philippines",
+    summary:
+      "Build a realistic weekly timetable in Philippine Time (UTC+8), then confirm each platform's peak hours, booking windows, cancellation rules and payout schedule before committing.",
+    readTime: "4 min",
+    level: "Beginner",
+    url: "https://tutor.rarejob.com.ph/site/how_it_works",
+    source: "RareJob Philippines · How it works",
+  },
 ];
 
 const videos: TutorialVideo[] = [
@@ -145,10 +195,12 @@ const categories = [
   "Online teaching",
   "Classroom skills",
   "Teaching resources",
+  "Philippines",
 ];
 
 const starterTasks = [
   "Check your internet, microphone, camera and lighting",
+  "Prepare a backup mobile-data connection and power option",
   "Choose the age group and level you feel ready to teach",
   "Prepare a simple lesson objective and a short activity",
   "Practise introducing yourself and giving clear instructions",
@@ -219,7 +271,7 @@ export function TutorialsPage() {
                 setCategory("Starting out");
                 setQuery("");
               }}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-dark px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110 dark:bg-brand dark:text-[#14200f]"
             >
               Explore beginner guides <ChevronRight size={17} />
             </button>
@@ -264,7 +316,7 @@ export function TutorialsPage() {
         <Card className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-dark dark:text-brand">
+              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-dark dark:text-[#b8e986]">
                 <ListChecks size={15} /> First-class checklist
               </p>
               <h2 className="mt-2 text-lg font-bold">Get ready to teach</h2>
@@ -272,7 +324,7 @@ export function TutorialsPage() {
                 Tick off these essentials as you prepare for your first class.
               </p>
             </div>
-            <span className="rounded-xl bg-brand-soft px-3 py-2 text-sm font-bold text-brand-dark dark:text-brand">
+            <span className="rounded-xl bg-brand-soft dark:bg-[#26351f] px-3 py-2 text-sm font-bold text-brand-dark dark:text-[#b8e986]">
               {progress}%
             </span>
           </div>
@@ -288,7 +340,7 @@ export function TutorialsPage() {
               return (
                 <label
                   key={task}
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition ${checked ? "border-brand/30 bg-brand-soft/60" : "border-line hover:bg-soft"}`}
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition ${checked ? "border-brand/30 bg-brand-soft/60 dark:bg-[#26351f]" : "border-line hover:bg-soft"}`}
                 >
                   <input
                     type="checkbox"
@@ -308,7 +360,7 @@ export function TutorialsPage() {
         </Card>
 
         <Card className="p-5 sm:p-6">
-          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-dark dark:text-brand">
+          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-dark dark:text-[#b8e986]">
             <Lightbulb size={15} /> A simple lesson flow
           </p>
           <h2 className="mt-2 text-lg font-bold">A structure you can reuse</h2>
@@ -324,7 +376,7 @@ export function TutorialsPage() {
               ["04", "Feedback & recap", "Praise effort, correct gently and review the key point.", "2–3 min"],
             ].map(([number, title, description, time]) => (
               <div key={number} className="flex gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-xs font-extrabold text-brand-dark dark:text-brand">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-xs font-extrabold text-brand-dark dark:text-[#b8e986]">
                   {number}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -343,7 +395,7 @@ export function TutorialsPage() {
       <section className="mt-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-brand-dark dark:text-brand">
+            <p className="text-xs font-bold uppercase tracking-wider text-brand-dark dark:text-[#b8e986]">
               Learning library
             </p>
             <h2 className="mt-1 text-xl font-bold">Explore articles and videos</h2>
@@ -357,13 +409,13 @@ export function TutorialsPage() {
                 setContentType("articles");
                 setActiveVideo(null);
               }}
-              className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition ${contentType === "articles" ? "bg-brand text-white shadow-sm" : "text-muted hover:text-ink"}`}
+              className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition ${contentType === "articles" ? "bg-brand-dark text-white shadow-sm dark:bg-brand dark:text-[#14200f]" : "text-muted hover:text-ink"}`}
             >
               <BookOpen size={15} /> Articles
             </button>
             <button
               onClick={() => setContentType("videos")}
-              className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition ${contentType === "videos" ? "bg-brand text-white shadow-sm" : "text-muted hover:text-ink"}`}
+              className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition ${contentType === "videos" ? "bg-brand-dark text-white shadow-sm dark:bg-brand dark:text-[#14200f]" : "text-muted hover:text-ink"}`}
             >
               <Play size={15} /> Videos
             </button>
@@ -404,7 +456,7 @@ export function TutorialsPage() {
                 {filteredArticles.map((item) => (
                   <Card key={item.title} className="group flex h-full flex-col p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-bold text-brand-dark dark:text-brand">
+                      <span className="rounded-full bg-brand-soft dark:bg-[#26351f] px-2.5 py-1 text-[11px] font-bold text-brand-dark dark:text-[#b8e986]">
                         {item.category}
                       </span>
                       <span className="flex items-center gap-1 text-xs text-muted">
@@ -422,7 +474,7 @@ export function TutorialsPage() {
                         href={item.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-brand-dark transition hover:bg-brand-soft dark:text-brand"
+                        className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-brand-dark transition hover:bg-brand-soft dark:text-[#b8e986] dark:hover:bg-[#26351f]"
                       >
                         Read guide <ArrowUpRight size={15} />
                       </a>
@@ -484,7 +536,7 @@ export function TutorialsPage() {
                       )}
                       <div className="p-5">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-bold text-brand-dark dark:text-brand">
+                          <span className="rounded-full bg-brand-soft dark:bg-[#26351f] px-2.5 py-1 text-[11px] font-bold text-brand-dark dark:text-[#b8e986]">
                             {item.category}
                           </span>
                           <span className="text-xs text-muted">{item.creator}</span>
@@ -495,7 +547,7 @@ export function TutorialsPage() {
                           <span className="text-xs text-muted">YouTube learning video</span>
                           <button
                             onClick={() => setActiveVideo(isActive ? null : item.id)}
-                            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-brand-dark transition hover:bg-brand-soft dark:text-brand"
+                            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-brand-dark transition hover:bg-brand-soft dark:text-[#b8e986] dark:hover:bg-[#26351f]"
                           >
                             {isActive ? "Close video" : "Play video"} <PlayCircle size={15} />
                           </button>
@@ -518,7 +570,7 @@ export function TutorialsPage() {
 
       <Card className="mt-7 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-dark dark:text-brand">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft dark:bg-[#26351f] text-brand-dark dark:text-[#b8e986]">
             <Laptop size={21} />
           </span>
           <div>
