@@ -305,8 +305,8 @@ export function GoalsPage() {
                     {goal.description && <p className="mt-1 whitespace-pre-wrap text-sm text-muted">{goal.description}</p>}
                   </div>
                   <div className="flex shrink-0 gap-1">
-                    <Button variant="ghost" className="h-9 w-9 px-0" aria-label="Edit goal" onClick={() => openEditGoal(goal)}><Pencil size={16} /></Button>
-                    <Button variant="ghost" className="h-9 w-9 px-0 text-red-600 hover:text-red-700" aria-label="Delete goal" onClick={() => deleteGoal(goal)}><Trash2 size={16} /></Button>
+                    <Button variant="secondary" className="h-10 min-w-10 px-3" aria-label="Edit goal" onClick={() => openEditGoal(goal)}><Pencil size={17} /><span className="hidden sm:inline">Edit</span></Button>
+                    <Button variant="secondary" className="h-10 min-w-10 px-3 text-red-600 hover:text-red-700" aria-label="Delete goal" onClick={() => deleteGoal(goal)}><Trash2 size={17} /><span className="hidden sm:inline">Delete</span></Button>
                   </div>
                 </div>
 
