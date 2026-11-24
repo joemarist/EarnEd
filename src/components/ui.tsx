@@ -90,12 +90,12 @@ export function PageHeader({
     <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
       <div>
         {eyebrow && (
-          <p className="mb-1 text-xs font-bold uppercase tracking-[0.15em] text-brand">{eyebrow}</p>
+          <p style={{ color: "var(--color-brand-dark)" }} className="mb-1 text-xs font-bold uppercase tracking-[0.15em] dark:!text-brand">{eyebrow}</p>
         )}
-        <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+        <h1 style={{ color: "var(--ink)" }} className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
           {title}
         </h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted">{description}</p>
+        <p style={{ color: "var(--muted)" }} className="mt-1 max-w-2xl text-sm">{description}</p>
       </div>
       {action}
     </div>
