@@ -354,7 +354,7 @@ export function LandingPage() {
               EarnEd brings your workplaces, class records, pay schedules, and income reports together in one place. It is designed to help independent tutors understand what they have earned and what they have received.
             </p>
             <p className="mt-4 text-base leading-7 text-muted">
-              As the product grows, this space can share the story behind EarnEd and the people it is built to support.
+              Keep historical class rates, payment schedules, and financial records organized as your teaching work changes.
             </p>
           </div>
         </section>
@@ -365,7 +365,7 @@ export function LandingPage() {
               <p className="section-kicker">Questions, answered</p>
               <h2 className="section-title text-left">A few things you might be wondering.</h2>
               <p className="mt-4 text-sm leading-6 text-muted">
-                Still curious? Send us a note and we’ll help.
+                Find quick answers about workplaces, class records, income goals, and reports below.
               </p>
             </div>
             <div className="divide-y divide-line border-y border-line">
