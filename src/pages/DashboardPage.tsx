@@ -12,6 +12,9 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -303,19 +306,37 @@ export function DashboardPage() {
     .sort((a, b) => b.outstanding - a.outstanding), [selectedWorkplaces, filteredLogs, filteredPayments]);
 
   const workplaceIncomeGroups = useMemo(() => {
-    const groups = new Map<string, Array<{ workplace: string; earned: number }>>();
-    for (const workplace of workplaceBalances) {
-      const rows = groups.get(workplace.currency) ?? [];
-      rows.push({ workplace: workplace.name, earned: workplace.earned });
-      groups.set(workplace.currency, rows);
+    const grouped = new Map<string, Workplace[]>();
+    for (const workplace of selectedWorkplaces) {
+      const workplaceLogs = filteredLogs.filter((log) =>
+        log.workplace_id === workplace.id || (!log.workplace_id && log.workplace === workplace.name)
+      );
+      if (!workplaceLogs.some((log) => Number(log.income ?? 0) > 0)) continue;
+      const currency = workplace.currency || "USD";
+      const rows = grouped.get(currency) ?? [];
+      rows.push(workplace);
+      grouped.set(currency, rows);
     }
-    return Array.from(groups.entries())
-      .map(([currency, data]) => ({
+
+    return Array.from(grouped.entries())
+      .map(([currency, groupWorkplaces]) => ({
         currency,
-        data: data.sort((a, b) => b.earned - a.earned),
+        workplaces: groupWorkplaces,
+        data: months.map((month) => {
+          const point: Record<string, string | number> = { month };
+          for (const workplace of groupWorkplaces) {
+            point[workplace.id] = filteredLogs
+              .filter((log) =>
+                monthKey(log.log_date) === month &&
+                (log.workplace_id === workplace.id || (!log.workplace_id && log.workplace === workplace.name))
+              )
+              .reduce((sum, log) => sum + Number(log.income ?? 0), 0);
+          }
+          return point;
+        }),
       }))
       .sort((a, b) => a.currency.localeCompare(b.currency));
-  }, [workplaceBalances]);
+  }, [selectedWorkplaces, filteredLogs, months]);
 
   const recentLogs = filteredLogs.slice(0, 6);
   const currentMonthLogs = filteredLogs.filter((log) => monthKey(log.log_date) === currentMonth);
@@ -434,35 +455,37 @@ export function DashboardPage() {
           <Card key={group.currency} className="p-5">
             <div>
               <h2 className="font-bold">Income by workplace · {group.currency}</h2>
-              <p className="text-xs text-muted">Total earned from your saved Daily Logs, grouped by workplace</p>
+              <p className="text-xs text-muted">Monthly income trends for each workplace, based on your saved Daily Logs</p>
             </div>
             <div className="mt-5 h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={group.data} margin={{ top: 8, right: 12, left: 4, bottom: 42 }}>
-                  <CartesianGrid vertical={false} stroke="var(--line)" />
-                  <XAxis
-                    dataKey="workplace"
-                    axisLine={false}
-                    tickLine={false}
-                    interval={0}
-                    angle={-20}
-                    textAnchor="end"
-                    height={58}
-                    tick={{ fill: "var(--muted)", fontSize: 11 }}
-                  />
+                <LineChart data={group.data} margin={{ top: 12, right: 16, left: 4, bottom: 4 }}>
+                  <CartesianGrid vertical={false} stroke="var(--line)" strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tickFormatter={monthLabel} axisLine={false} tickLine={false} tick={{ fill: "var(--muted)", fontSize: 11 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--muted)", fontSize: 11 }} width={56} />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--surface)",
-                      border: "1px solid var(--line)",
-                      borderRadius: "12px",
-                      color: "var(--ink)",
-                    }}
+                    contentStyle={{ backgroundColor: "var(--surface)", border: "1px solid var(--line)", borderRadius: "12px", color: "var(--ink)" }}
                     labelStyle={{ color: "var(--ink)" }}
                     formatter={(value) => formatMoney(Number(value), group.currency)}
+                    labelFormatter={(value) => {
+                      const [year, month] = String(value).split("-").map(Number);
+                      return new Date(year, month - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+                    }}
                   />
-                  <Bar dataKey="earned" name="Total earned" fill="#76BE3F" radius={[5, 5, 0, 0]} />
-                </BarChart>
+                  <Legend wrapperStyle={{ color: "var(--muted)", fontSize: 12 }} />
+                  {group.workplaces.map((workplace, index) => (
+                    <Line
+                      key={workplace.id}
+                      type="monotone"
+                      dataKey={workplace.id}
+                      name={workplace.name}
+                      stroke={["#76BE3F", "#2F7D6D", "#4F83CC", "#D69E36", "#9B72CF", "#D97777"][index % 6]}
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  ))}
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </Card>
