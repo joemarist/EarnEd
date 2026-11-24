@@ -88,28 +88,138 @@ export function DailyLogPage() {
       setSaving(false);
       return;
     }
-  
-    const { data, error } = await supabase
-      .from("daily_logs")
-      .insert({
-        user_id: userData.user.id,
-        log_date: selectedDate,
-        workplace: selectedWorkplace,
-        classes: classCount,
-        rate_per_class: rate,
-        income,
-        notes: remark.trim() || null,
-      })
-      .select()
-      .single();
-  
-    if (error) {
-      setSaveError(error.message);
+
+    if (classCount === 0) {
+      const { error } = await supabase
+        .from("daily_logs")
+        .delete()
+        .eq("user_id", userData.user.id)
+        .eq("log_date", selectedDate)
+        .eq("workplace", selectedWorkplace);
+    
+      if (error) {
+        setSaveError(error.message);
+        setSaving(false);
+        return;
+      }
+    
+      setLogs((previous) =>
+        previous.filter(
+          (log) =>
+            !(
+              log.log_date === selectedDate &&
+              log.workplace === selectedWorkplace
+            )
+        )
+      );
+    
+      setAdding(false);
       setSaving(false);
+      setRemark("");
+      setClassCount(3);
+      setSelectedWorkplace("");
       return;
     }
   
-    setLogs((previous) => [...previous, data]);
+    const { data: existingLogs, error: lookupError } = await supabase
+  .from("daily_logs")
+  .select("*")
+  .eq("user_id", userData.user.id)
+  .eq("log_date", selectedDate)
+  .eq("workplace", selectedWorkplace);
+
+if (lookupError) {
+  setSaveError(lookupError.message);
+  setSaving(false);
+  return;
+}
+
+let savedLog;
+
+if (existingLogs && existingLogs.length > 0) {
+  const existing = existingLogs[0];
+
+  const totalClasses =
+    existingLogs.reduce((sum, log) => sum + (log.classes ?? 0), 0) +
+    classCount;
+
+  const notes = [
+    ...new Set([
+      ...existingLogs.map((log) => log.notes).filter(Boolean),
+      remark.trim(),
+    ].filter(Boolean)),
+  ].join("\n") || null;
+
+  const { data, error } = await supabase
+    .from("daily_logs")
+    .update({
+      classes: totalClasses,
+      rate_per_class: rate,
+      income: totalClasses * rate,
+      notes,
+    })
+    .eq("id", existing.id)
+    .select()
+    .single();
+
+  if (error) {
+    setSaveError(error.message);
+    setSaving(false);
+    return;
+  }
+
+  savedLog = data;
+
+  const duplicateIds = existingLogs
+    .slice(1)
+    .map((log) => log.id);
+
+  if (duplicateIds.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("daily_logs")
+      .delete()
+      .in("id", duplicateIds);
+
+    if (deleteError) {
+      setSaveError(deleteError.message);
+      setSaving(false);
+      return;
+    }
+  }
+} else {
+  const { data, error } = await supabase
+    .from("daily_logs")
+    .insert({
+      user_id: userData.user.id,
+      log_date: selectedDate,
+      workplace: selectedWorkplace,
+      classes: classCount,
+      rate_per_class: rate,
+      income,
+      notes: remark.trim() || null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    setSaveError(error.message);
+    setSaving(false);
+    return;
+  }
+
+  savedLog = data;
+}
+  
+    setLogs((previous) => [
+      ...previous.filter(
+        (log) =>
+          !(
+            log.log_date === selectedDate &&
+            log.workplace === selectedWorkplace
+          )
+      ),
+      savedLog,
+    ]);
     setAdding(false);
     setSaving(false);
     setRemark("");
@@ -124,6 +234,38 @@ export function DailyLogPage() {
   
     const originalLogs = group.logs;
     const originalTotal = group.classes;
+
+    if (editedClasses === 0) {
+      setSaving(true);
+      setSaveError("");
+    
+      const ids = group.logs.map((log: any) => log.id);
+    
+      const { error } = await supabase
+        .from("daily_logs")
+        .delete()
+        .in("id", ids);
+    
+      if (error) {
+        setSaveError(error.message);
+        setSaving(false);
+        return;
+      }
+    
+      setLogs((previous) =>
+        previous.filter((log) => !ids.includes(log.id))
+      );
+    
+      setViewingDayLogs((previous) =>
+        previous
+          ? previous.filter((log) => !ids.includes(log.id))
+          : previous
+      );
+    
+      setEditingWorkplace(null);
+      setSaving(false);
+      return;
+    }
   
     // Keep existing class counts where possible.
     // If the total is reduced, remove classes from later records first.
@@ -465,7 +607,7 @@ export function DailyLogPage() {
             </Select>
           </div>
           <div className="divide-y divide-line">
-          {logs
+          {monthlyLogs
             .filter((log) => {
               const term = searchTerm.toLowerCase().trim();
 

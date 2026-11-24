@@ -21,6 +21,7 @@ import { downloadText } from "../lib/utils";
 
 export function AccountPage() {
   const [user, setUser] = useState<any>(null);
+  const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     async function loadUser() {
@@ -28,6 +29,11 @@ export function AccountPage() {
 
       if (!error) {
         setUser(data.user);
+        setFullName(
+          data.user.user_metadata?.full_name ||
+          data.user.user_metadata?.name ||
+          ""
+        );
       }
     }
 
@@ -42,6 +48,24 @@ export function AccountPage() {
   const [deleteError, setDeleteError] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  async function handleSaveChanges() {
+    setSaved(false);
+  
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        full_name: fullName,
+        name: fullName,
+      },
+    });
+  
+    if (error) {
+      alert(error.message);
+      return;
+    }
+  
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
   async function handleDeleteAccount() {
     setDeleting(true);
     setDeleteError("");
@@ -93,7 +117,11 @@ export function AccountPage() {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold">
                 Full name
-                <Input defaultValue={user?.user_metadata?.full_name || user?.user_metadata?.name || ""} className="mt-2" />
+                <Input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="mt-2"
+                />
               </label>
               <label className="text-sm font-semibold">
                 Email address
@@ -116,10 +144,7 @@ export function AccountPage() {
             </div>
             <Button
               className="mt-5"
-              onClick={() => {
-                setSaved(true);
-                setTimeout(() => setSaved(false), 2000);
-              }}
+              onClick={handleSaveChanges}
             >
               Save changes
             </Button>
