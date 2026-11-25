@@ -5,14 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#76BE3F" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://earnedtracker.site/#organization",
+            "name": "EarnEd",
+            "url": "https://earnedtracker.site/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://earnedtracker.site/brand/earned-mark.png"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://earnedtracker.site/#website",
+            "url": "https://earnedtracker.site/",
+            "name": "EarnEd",
+            "description": "A free income tracker made for online ESL tutors.",
+            "publisher": {
+              "@id": "https://earnedtracker.site/#organization"
+            },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://earnedtracker.site/#application",
+            "name": "EarnEd",
+            "url": "https://earnedtracker.site/",
+            "applicationCategory": "BusinessApplication",
+            "applicationSubCategory": "ESL tutor income and class tracking",
+            "operatingSystem": "Any",
+            "isAccessibleForFree": true,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "description": "A free income tracker for ESL tutors to organize workplaces, log classes, track pay schedules and payments, set income goals, and review reports.",
+            "publisher": {
+              "@id": "https://earnedtracker.site/#organization"
+            }
+          }
+        ]
+      }
+    </script>
     <link rel="canonical" href="https://earnedtracker.site/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="EarnEd" />
-    <meta property="og:title" content="EarnEd | Free ESL Tutor Income Tracker" />
+    <meta property="og:title" content="Free ESL Tutor Income Tracker | EarnEd" />
     <meta property="og:description" content="Organize your ESL classes, track workplace payments, monitor income goals, and understand what you have earned and what you are still owed." />
     <meta property="og:url" content="https://earnedtracker.site/" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="EarnEd | Free ESL Tutor Income Tracker" />
+    <meta name="twitter:title" content="Free ESL Tutor Income Tracker | EarnEd" />
     <meta name="twitter:description" content="A simple income and class tracker made for online ESL tutors." />
     <meta
       name="description"
@@ -20,7 +67,7 @@
     />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/brand/earned-mark.png" />
-    <title>EarnEd | ESL Income Tracker</title>
+    <title>Free ESL Tutor Income Tracker | EarnEd</title>
   </head>
   <body>
     <div id="root"></div>
