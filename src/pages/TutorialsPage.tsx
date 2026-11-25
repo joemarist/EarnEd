@@ -471,9 +471,9 @@ export function TutorialsPage() {
               <span className="text-xs text-muted">External resources · Opens in a new tab</span>
             </div>
             {filteredArticles.length ? (
-              <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-3 grid w-full min-w-0 max-w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {filteredArticles.map((item) => (
-                  <Card key={item.title} className="group flex h-full flex-col p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
+                  <Card key={item.title} className="group flex h-full min-w-0 max-w-full flex-col overflow-hidden p-4 transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="rounded-full bg-brand-soft dark:bg-[#26351f] px-2.5 py-1 text-[11px] font-bold text-brand-dark dark:text-[#b8e986]">
                         {item.category}
@@ -484,8 +484,8 @@ export function TutorialsPage() {
                     </div>
                     <h3 className="mt-4 text-base font-bold leading-6">{item.title}</h3>
                     <p className="mt-2 flex-1 text-sm leading-6 text-muted">{item.summary}</p>
-                    <div className="mt-4 flex items-center justify-between gap-2 border-t border-line pt-4">
-                      <div className="min-w-0">
+                    <div className="mt-4 flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
+                      <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-semibold">{item.source}</p>
                         <p className="mt-0.5 text-[11px] text-muted">{item.level}</p>
                       </div>
@@ -493,7 +493,7 @@ export function TutorialsPage() {
                         href={item.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-brand-dark transition hover:bg-brand-soft dark:text-[#b8e986] dark:hover:bg-[#26351f]"
+                        className="inline-flex min-h-10 max-w-full shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold text-brand-dark transition hover:bg-brand-soft dark:text-[#b8e986] dark:hover:bg-[#26351f]"
                       >
                         Read guide <ArrowUpRight size={15} />
                       </a>
