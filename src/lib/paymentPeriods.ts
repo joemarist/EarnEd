@@ -50,8 +50,14 @@ export function getPayPeriodForDate(
   if (schedule === "weekly") {
     const cutoffDay = settings.cutoff_day_of_week ?? 7; // Monday=1 ... Sunday=7
     const weekday = date.getUTCDay() || 7;
-    const daysSinceCutoff = (weekday - cutoffDay + 7) % 7;
-    const end = addDays(date, -daysSinceCutoff);
+
+    // A log belongs to the pay period that ends on the next configured
+    // cutoff day (or today when the log itself is on the cutoff day).
+    // Using the previous cutoff incorrectly moved Monday-Saturday logs
+    // into the preceding week's period.
+    const daysUntilCutoff = (cutoffDay - weekday + 7) % 7;
+    const end = addDays(date, daysUntilCutoff);
+
     return {
       start: toDateString(addDays(end, -6)),
       end: toDateString(end),
