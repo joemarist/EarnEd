@@ -428,7 +428,7 @@ export function TutorialsPage() {
                 setContentType("articles");
                 setActiveVideo(null);
               }}
-              className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition ${contentType === "articles" ? "bg-brand-dark text-white shadow-sm dark:bg-brand dark:text-[#14200f]" : "text-muted hover:text-ink"}`}
+              className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition sm:min-h-9 sm:px-3 ${contentType === "articles" ? "bg-brand-dark text-white shadow-sm dark:bg-brand dark:text-[#14200f]" : "text-muted hover:text-ink"}`}
             >
               <BookOpen size={15} /> Articles
             </button>
@@ -456,7 +456,7 @@ export function TutorialsPage() {
               <button
                 key={item}
                 onClick={() => setCategory(item)}
-                className={`min-h-9 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold transition ${category === item ? "bg-brand-dark text-white dark:bg-brand dark:text-[#14200f]" : "border border-line bg-surface text-muted hover:text-ink"}`}
+                className={`min-h-11 whitespace-nowrap rounded-full px-4 py-2.5 text-xs font-semibold transition sm:min-h-9 sm:px-3.5 sm:py-2 ${category === item ? "bg-brand-dark text-white dark:bg-brand dark:text-[#14200f]" : "border border-line bg-surface text-muted hover:text-ink"}`}
               >
                 {item}
               </button>
@@ -493,7 +493,7 @@ export function TutorialsPage() {
                         href={item.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex min-h-10 max-w-full shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold text-brand-dark transition hover:bg-brand-soft dark:text-[#b8e986] dark:hover:bg-[#26351f]"
+                        className="inline-flex min-h-11 max-w-full shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 text-xs font-bold sm:min-h-10 sm:px-3 text-brand-dark transition hover:bg-brand-soft dark:text-[#b8e986] dark:hover:bg-[#26351f]"
                       >
                         Read guide <ArrowUpRight size={15} />
                       </a>
@@ -566,7 +566,7 @@ export function TutorialsPage() {
                           <span className="text-xs text-muted">YouTube learning video</span>
                           <button
                             onClick={() => setActiveVideo(isActive ? null : item.id)}
-                            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-brand-dark transition hover:bg-brand-soft dark:text-[#b8e986] dark:hover:bg-[#26351f]"
+                            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3.5 text-xs font-bold sm:min-h-9 sm:px-3 text-brand-dark transition hover:bg-brand-soft dark:text-[#b8e986] dark:hover:bg-[#26351f]"
                           >
                             {isActive ? "Close video" : "Play video"} <PlayCircle size={15} />
                           </button>
@@ -604,7 +604,7 @@ export function TutorialsPage() {
           href="https://www.teachingenglish.org.uk/teaching-resources"
           target="_blank"
           rel="noreferrer"
-          className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-line px-4 py-2 text-sm font-bold transition hover:bg-soft"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-line px-4 py-2 text-sm font-bold sm:min-h-10 transition hover:bg-soft"
         >
           Explore free resources <ArrowUpRight size={16} />
         </a>
