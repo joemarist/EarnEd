@@ -93,6 +93,9 @@ export function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [testEmailSending, setTestEmailSending] = useState(false);
+  const [testEmailMessage, setTestEmailMessage] = useState("");
+  const [testEmailError, setTestEmailError] = useState("");
   const [pageError, setPageError] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -184,6 +187,41 @@ export function AccountPage() {
       }
     }
     setSaving(false);
+  }
+
+  async function handleTestEmail() {
+    setTestEmailSending(true);
+    setTestEmailMessage("");
+    setTestEmailError("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user?.email) throw new Error("Please sign in again before testing email delivery.");
+      if (!authData.user.email_confirmed_at) throw new Error("Verify your account email before testing email delivery.");
+      if (!reminders.email_enabled) throw new Error("Turn on Email notifications first.");
+
+      const { error: saveError } = await supabase.from("notification_preferences").upsert({
+        user_id: authData.user.id,
+        payday: reminders.payday,
+        overdue: reminders.overdue,
+        monthly: reminders.monthly,
+        goals: reminders.goals,
+        in_app_enabled: reminders.in_app_enabled,
+        email_enabled: true,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+      if (saveError) throw saveError;
+
+      const { data, error } = await supabase.functions.invoke("send-notification-email", { body: { test: true } });
+      if (error) throw new Error(error.message || "The test email request failed.");
+      if (data?.error) throw new Error(data.error);
+      if (!data?.success || !data?.test) throw new Error("The email service did not confirm the test request.");
+      setSaved(true);
+      setTestEmailMessage("Test email sent to " + authData.user.email + ". Check your inbox and spam folder.");
+    } catch (error) {
+      setTestEmailError(error instanceof Error ? error.message : "We could not send the test email.");
+    } finally {
+      setTestEmailSending(false);
+    }
   }
 
   async function handleAvatarUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -465,6 +503,14 @@ export function AccountPage() {
                 </span>
                 <input type="checkbox" checked={reminders.email_enabled} onChange={(event) => { setReminders((previous) => ({ ...previous, email_enabled: event.target.checked })); setSaved(false); }} className="h-5 w-5 accent-[#76BE3F]" />
               </label>
+            </div>
+            <div className="mt-3 rounded-xl border border-line bg-soft/40 p-3">
+              <p className="text-xs leading-5 text-muted">Save your email preference and send a one-time test message to your verified account email.</p>
+              <Button className="mt-3 w-full sm:w-auto" variant="secondary" onClick={handleTestEmail} disabled={testEmailSending || !reminders.email_enabled}>
+                {testEmailSending ? "Sending test email..." : "Send test email"}
+              </Button>
+              {testEmailMessage && <p role="status" className="mt-2 text-xs text-emerald-700 dark:text-emerald-300">{testEmailMessage}</p>}
+              {testEmailError && <p role="alert" className="mt-2 text-xs text-red-600 dark:text-red-300">{testEmailError}</p>}
             </div>
             <div className="mt-4 divide-y divide-line">
               {([
