@@ -562,14 +562,15 @@ export function PaymentsPage() {
         action={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button
+              className="w-full sm:w-auto"
               variant="secondary"
               onClick={() => downloadText("earned-payments.csv", csv)}
               disabled={filteredPeriods.length === 0}
             >
               <Download size={16} /> <span className="hidden sm:inline">Export CSV</span>
             </Button>
-            <Button onClick={() => nextDuePeriods[0] && openRecordModal(nextDuePeriods[0])} disabled={nextDuePeriods.length === 0}>
-              <Plus size={16} /> Record next payment
+            <Button className="w-full sm:w-auto" onClick={() => nextDuePeriods[0] && openRecordModal(nextDuePeriods[0])} disabled={nextDuePeriods.length === 0}>
+              <Plus size={16} /> <span className="sm:hidden">Record payment</span><span className="hidden sm:inline">Record next payment</span>
             </Button>
           </div>
         }
@@ -663,8 +664,8 @@ export function PaymentsPage() {
               <p className="text-xs text-muted">
                 {periodsByWorkplace.length} workplace{periodsByWorkplace.length === 1 ? "" : "s"} · {filteredPeriods.length} pay period{filteredPeriods.length === 1 ? "" : "s"}
               </p>
-              <div className="flex gap-2">
-                <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setCollapsedWorkplaces(periodsByWorkplace.map((group) => group.workplaceId))}>Collapse all</Button>
+              <div className="flex w-full gap-2 min-[420px]:w-auto">
+                <Button variant="ghost" className="min-h-10 flex-1 px-3 text-xs min-[420px]:flex-none" onClick={() => setCollapsedWorkplaces(periodsByWorkplace.map((group) => group.workplaceId))}>Collapse all</Button>
                 <Button variant="ghost" className="min-h-10 flex-1 px-3 text-xs min-[420px]:flex-none" onClick={() => setCollapsedWorkplaces([])}>Expand all</Button>
               </div>
             </div>
