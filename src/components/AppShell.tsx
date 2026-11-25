@@ -22,6 +22,7 @@ import { Navigate, NavLink, Outlet, useLocation } from "react-router";
 import { Brand } from "./Brand";
 import { Button } from "./ui";
 import { SupportEarnEdModal } from "./SupportEarnEdModal";
+import { NotificationCenter } from "./NotificationCenter";
 
 const primaryNav = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -268,6 +269,7 @@ export function AppShell() {
           </div>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <LiveClock timezone={safeTimezone} />
+            <NotificationCenter />
             <ThemeButton />
             <NavLink
               to="/app/account"
