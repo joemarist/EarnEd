@@ -548,20 +548,27 @@ export function AccountPage() {
                 <p className="text-xs text-muted">Choose how EarnEd looks on this device</p>
               </div>
             </div>
-            <div className="mt-4 flex flex-col gap-3 rounded-xl border border-line bg-soft/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-line bg-soft/40 p-4">
               <div className="min-w-0">
-                <p className="text-sm font-semibold">{darkMode ? "Dark mode is on" : "Light mode is on"}</p>
-                <p className="mt-1 text-xs text-muted">Your preference is saved automatically on this device.</p>
+                <p className="text-sm font-semibold">{darkMode ? "Dark mode" : "Light mode"}</p>
+                <p className="mt-1 text-xs text-muted">Your theme is saved automatically on this device.</p>
               </div>
               <Button
                 type="button"
-                variant="secondary"
-                className="w-full justify-center sm:w-auto"
+                variant="ghost"
+                role="switch"
+                aria-checked={darkMode}
+                aria-label={darkMode ? "Dark mode enabled. Switch to light mode." : "Light mode enabled. Switch to dark mode."}
+                title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
                 onClick={() => setDarkMode((current) => !current)}
-                aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                className={`relative h-10 w-[4.5rem] min-h-0 shrink-0 justify-start rounded-full border p-1 shadow-inner transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${darkMode ? "border-slate-600 bg-slate-700" : "border-amber-200 bg-amber-100"}`}
               >
-                {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-                Switch to {darkMode ? "light" : "dark"} mode
+                <span
+                  aria-hidden="true"
+                  className={`flex h-8 w-8 items-center justify-center rounded-full bg-white text-amber-600 shadow-md transition-transform duration-200 dark:bg-slate-100 ${darkMode ? "translate-x-8 text-slate-700" : "translate-x-0"}`}
+                >
+                  {darkMode ? <Moon size={16} fill="currentColor" /> : <Sun size={17} />}
+                </span>
               </Button>
             </div>
           </Card>
