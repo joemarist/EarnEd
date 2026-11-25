@@ -7,13 +7,20 @@ type SupportEarnEdModalProps = {
 
 export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
   const [qrUnavailable, setQrUnavailable] = useState(false);
+  const [qrExpanded, setQrExpanded] = useState(false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        if (qrExpanded) {
+          setQrExpanded(false);
+        } else {
+          onClose();
+        }
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -21,7 +28,7 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, [onClose, qrExpanded]);
 
   return (
     <div
@@ -81,7 +88,7 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
               <div>
                 <p className="text-xs font-extrabold sm:text-sm">Support via GCash</p>
                 <p className="mt-0.5 text-[9px] leading-3.5 text-muted sm:text-xs sm:leading-4">
-                  Scan with your GCash app
+                  Tap the QR code to enlarge
                 </p>
               </div>
               <span className="shrink-0 rounded-full bg-brand-soft px-2 py-1 text-[9px] font-bold text-brand-dark dark:text-brand sm:px-2.5 sm:text-[10px]">
@@ -95,12 +102,19 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
                   The GCash QR image could not be loaded. Please try again later.
                 </p>
               ) : (
-                <img
-                  src="/My_gcash.jpg"
-                  alt="GCash QR code for voluntarily supporting EarnEd"
-                  onError={() => setQrUnavailable(true)}
-                  className="h-full w-full object-contain"
-                />
+                <button
+                  type="button"
+                  onClick={() => setQrExpanded(true)}
+                  aria-label="Enlarge GCash QR code"
+                  className="h-full w-full cursor-zoom-in rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                >
+                  <img
+                    src="/My_gcash.jpg"
+                    alt="GCash QR code for voluntarily supporting EarnEd"
+                    onError={() => setQrUnavailable(true)}
+                    className="h-full w-full object-contain"
+                  />
+                </button>
               )}
             </div>
             <p className="mt-1.5 text-center text-[9px] leading-3.5 text-muted sm:mt-2 sm:text-[10px] sm:leading-4">
@@ -122,6 +136,35 @@ export function SupportEarnEdModal({ onClose }: SupportEarnEdModalProps) {
           </button>
         </div>
       </section>
+
+      {qrExpanded && !qrUnavailable && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Enlarged GCash QR code"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setQrExpanded(false);
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setQrExpanded(false)}
+            aria-label="Close enlarged QR code"
+            className="absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <X size={22} />
+          </button>
+          <img
+            src="/My_gcash.jpg"
+            alt="Enlarged GCash QR code for voluntarily supporting EarnEd"
+            className="max-h-[88dvh] max-w-[min(92vw,720px)] rounded-xl bg-white p-2 object-contain shadow-2xl"
+          />
+          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-xs font-medium text-white/75">
+            Tap outside or press Esc to close
+          </p>
+        </div>
+      )}
     </div>
   );
 }
