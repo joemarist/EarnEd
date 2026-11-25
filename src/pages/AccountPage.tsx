@@ -106,7 +106,16 @@ export function AccountPage() {
           const metadata = data.user.user_metadata ?? {};
           setUser(data.user);
           setFullName(metadata.full_name || metadata.name || "");
-          setAvatarUrl(metadata.avatar_url || metadata.picture || "");
+          const { data: profile } = await supabase
+            .from("user_profiles")
+            .select("avatar_path, updated_at")
+            .eq("user_id", data.user.id)
+            .maybeSingle();
+          const storedAvatar = profile?.avatar_path
+            ? supabase.storage.from("avatars").getPublicUrl(profile.avatar_path).data.publicUrl +
+              `?v=${encodeURIComponent(profile.updated_at || data.user.updated_at || Date.now())}`
+            : "";
+          setAvatarUrl(storedAvatar || metadata.avatar_url || metadata.picture || "");
           setDefaultCurrency(metadata.default_currency || "USD");
           setTimezone(metadata.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
           setReminders({ ...defaultReminders, ...(metadata.reminder_preferences ?? {}) });
@@ -163,14 +172,19 @@ export function AccountPage() {
 
     setAvatarUploading(true);
     try {
+      const { data: previousProfile } = await supabase
+        .from("user_profiles")
+        .select("avatar_path")
+        .eq("user_id", user.id)
+        .maybeSingle();
       const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1] || "png";
-      const filePath = `${user.id}/avatar.${extension}`;
+      const filePath = `${user.id}/avatar-${Date.now()}.${extension}`;
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(filePath, file, {
-          cacheControl: "3600",
+          cacheControl: "0",
           contentType: file.type,
-          upsert: true,
+          upsert: false,
         });
       if (uploadError) {
         if (uploadError.message.toLowerCase().includes("bucket not found")) {
@@ -179,16 +193,25 @@ export function AccountPage() {
         throw uploadError;
       }
 
+      const { error: profileError } = await supabase
+        .from("user_profiles")
+        .upsert(
+          { user_id: user.id, avatar_path: filePath, updated_at: new Date().toISOString() },
+          { onConflict: "user_id" },
+        );
+      if (profileError) {
+        await supabase.storage.from("avatars").remove([filePath]);
+        throw profileError;
+      }
+
       const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(filePath);
       const nextAvatarUrl = `${publicData.publicUrl}?v=${Date.now()}`;
-      const { data, error } = await supabase.auth.updateUser({
-        data: { avatar_url: nextAvatarUrl },
-      });
-      if (error) throw error;
-
-      setUser(data.user);
       setAvatarUrl(nextAvatarUrl);
       setSaved(true);
+
+      if (previousProfile?.avatar_path && previousProfile.avatar_path !== filePath) {
+        await supabase.storage.from("avatars").remove([previousProfile.avatar_path]);
+      }
     } catch (error) {
       setAvatarError(error instanceof Error ? error.message : "We could not upload your profile picture.");
     } finally {
