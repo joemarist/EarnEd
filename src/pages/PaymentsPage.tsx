@@ -560,7 +560,7 @@ export function PaymentsPage() {
         title="Payments"
         description="Pay periods are generated from each workplace's schedule. Record the amount received—EarnEd handles the dates."
         action={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button
               variant="secondary"
               onClick={() => downloadText("earned-payments.csv", csv)}
@@ -603,32 +603,32 @@ export function PaymentsPage() {
         </Card>
       )}
 
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         {kpiCards.map(({ label, values, detail, Icon, warning }) => (
-          <Card key={label} className="p-5">
+          <Card key={label} className="p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm text-muted">{label}</p>
                 <div className="mt-2 space-y-1">
-                  {values.length > 0 ? values.map((value, index) => <p key={label + index} className="text-xl font-bold">{value}</p>) : <p className="text-2xl font-bold">—</p>}
+                  {values.length > 0 ? values.map((value, index) => <p key={label + index} className="break-words text-lg font-bold sm:text-xl">{value}</p>) : <p className="text-2xl font-bold">—</p>}
                 </div>
               </div>
               <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${warning ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" : "bg-brand-soft text-brand-dark"}`}>
                 <Icon size={19} />
               </span>
             </div>
-            <p className="mt-3 text-xs text-muted">{detail}</p>
+            <p className="mt-2 text-xs leading-relaxed text-muted sm:mt-3">{detail}</p>
           </Card>
         ))}
       </section>
 
       <Card className="mt-5 overflow-hidden">
-        <div className="flex flex-col justify-between gap-3 border-b border-line p-5 sm:flex-row sm:items-center">
+        <div className="flex flex-col justify-between gap-4 border-b border-line p-4 sm:p-5 sm:flex-row sm:items-center">
           <div>
             <h2 className="font-bold">Pay-period reconciliation</h2>
             <p className="text-xs text-muted">Periods are calculated from Daily Logs and each workplace's saved payment schedule.</p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-3">
             <label className="relative block">
               <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <Input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search workplace or reference" className="pl-9" />
@@ -658,14 +658,14 @@ export function PaymentsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4 p-4 sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="space-y-4 p-3 sm:p-5">
+            <div className="flex flex-col items-start justify-between gap-3 min-[420px]:flex-row min-[420px]:items-center">
               <p className="text-xs text-muted">
                 {periodsByWorkplace.length} workplace{periodsByWorkplace.length === 1 ? "" : "s"} · {filteredPeriods.length} pay period{filteredPeriods.length === 1 ? "" : "s"}
               </p>
               <div className="flex gap-2">
                 <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setCollapsedWorkplaces(periodsByWorkplace.map((group) => group.workplaceId))}>Collapse all</Button>
-                <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setCollapsedWorkplaces([])}>Expand all</Button>
+                <Button variant="ghost" className="min-h-10 flex-1 px-3 text-xs min-[420px]:flex-none" onClick={() => setCollapsedWorkplaces([])}>Expand all</Button>
               </div>
             </div>
             {periodsByWorkplace.map((group) => {
@@ -678,7 +678,7 @@ export function PaymentsPage() {
                     onClick={() => setCollapsedWorkplaces((previous) => isCollapsed
                       ? previous.filter((id) => id !== group.workplaceId)
                       : [...previous, group.workplaceId])}
-                    className="flex w-full flex-col gap-3 bg-soft/60 p-4 text-left transition-colors hover:bg-soft sm:p-5"
+                    className="flex w-full flex-col gap-4 bg-soft/60 p-4 text-left transition-colors hover:bg-soft sm:p-5"
                   >
                     <div className="flex w-full items-start justify-between gap-3">
                       <div className="flex min-w-0 items-start gap-3">
@@ -692,23 +692,23 @@ export function PaymentsPage() {
                           </p>
                         </div>
                       </div>
-                      <span className="flex shrink-0 items-center gap-2 text-xs font-semibold text-muted">
+                      <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-muted sm:gap-2 sm:text-xs">
                         {isCollapsed ? "Show periods" : "Hide periods"}
                         {isCollapsed ? <ChevronRight size={17} /> : <ChevronDown size={17} />}
                       </span>
                     </div>
-                    <div className="grid w-full grid-cols-3 gap-2">
-                      <div className="rounded-xl border border-line/70 bg-surface px-3 py-2">
+                    <div className="grid w-full grid-cols-1 gap-2 min-[390px]:grid-cols-3 sm:gap-2">
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-line/70 bg-surface px-3 py-2.5 min-[390px]:block min-[390px]:py-2">
                         <p className="text-[10px] uppercase tracking-wide text-muted">Expected</p>
-                        <p className="mt-1 truncate text-sm font-semibold">{formatMoney(group.expected, group.currency)}</p>
+                        <p className="truncate text-sm font-semibold min-[390px]:mt-1">{formatMoney(group.expected, group.currency)}</p>
                       </div>
                       <div className="rounded-xl border border-line/70 bg-surface px-3 py-2">
                         <p className="text-[10px] uppercase tracking-wide text-muted">Received</p>
-                        <p className="mt-1 truncate text-sm font-semibold">{formatMoney(group.received, group.currency)}</p>
+                        <p className="truncate text-sm font-semibold min-[390px]:mt-1">{formatMoney(group.received, group.currency)}</p>
                       </div>
                       <div className="rounded-xl border border-line/70 bg-surface px-3 py-2">
                         <p className="text-[10px] uppercase tracking-wide text-muted">Outstanding</p>
-                        <p className={`mt-1 truncate text-sm font-bold ${group.outstanding > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(group.outstanding, group.currency)}</p>
+                        <p className={`truncate text-sm font-bold min-[390px]:mt-1 ${group.outstanding > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(group.outstanding, group.currency)}</p>
                       </div>
                     </div>
                   </button>
@@ -724,29 +724,29 @@ export function PaymentsPage() {
                               </div>
                               <p className="mt-1 text-xs text-muted">Expected payday: {displayDate(item.dueDate)}</p>
                             </div>
-                            <div className="grid grid-cols-3 gap-3 text-sm lg:min-w-[390px]">
-                              <div><p className="text-[10px] uppercase tracking-wide text-muted">Expected</p><p className="mt-1 font-semibold">{formatMoney(item.expected, item.currency)}</p></div>
-                              <div><p className="text-[10px] uppercase tracking-wide text-muted">Received</p><p className="mt-1 font-semibold">{formatMoney(item.received, item.currency)}</p></div>
-                              <div><p className="text-[10px] uppercase tracking-wide text-muted">Balance</p><p className={`mt-1 font-bold ${item.balance > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(item.balance, item.currency)}</p></div>
+                            <div className="grid grid-cols-1 gap-2 rounded-xl bg-soft/50 p-3 text-sm min-[390px]:grid-cols-3 min-[390px]:gap-3 lg:min-w-[390px]">
+                              <div className="flex items-center justify-between gap-3 min-[390px]:block"><p className="text-[10px] uppercase tracking-wide text-muted">Expected</p><p className="font-semibold min-[390px]:mt-1">{formatMoney(item.expected, item.currency)}</p></div>
+                              <div className="flex items-center justify-between gap-3 min-[390px]:block"><p className="text-[10px] uppercase tracking-wide text-muted">Received</p><p className="font-semibold min-[390px]:mt-1">{formatMoney(item.received, item.currency)}</p></div>
+                              <div className="flex items-center justify-between gap-3 min-[390px]:block"><p className="text-[10px] uppercase tracking-wide text-muted">Balance</p><p className={`font-bold min-[390px]:mt-1 ${item.balance > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(item.balance, item.currency)}</p></div>
                             </div>
                           </div>
-                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                          <div className="mt-4 flex flex-col items-stretch gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                             <button
                               type="button"
-                              className="text-xs font-medium text-brand hover:underline"
+                              className="min-h-10 self-start text-sm font-medium text-brand hover:underline"
                               aria-expanded={expandedPeriods.includes(item.key)}
                               onClick={() => setExpandedPeriods((previous) => previous.includes(item.key) ? previous.filter((key) => key !== item.key) : [...previous, item.key])}
                             >
                               {expandedPeriods.includes(item.key) ? "Hide payment history" : `Payment history (${item.payments.length})`}
                             </button>
                             {item.balance > 0.005 && item.dueDate <= todayLocal() && item.expected > 0 ? (
-                              <Button className="min-h-10 px-4 text-xs" onClick={() => openRecordModal(item)}>Record amount</Button>
+                              <Button className="min-h-11 w-full px-4 text-sm min-[420px]:w-auto" onClick={() => openRecordModal(item)}>Record amount</Button>
                             ) : item.status === "Upcoming" ? (
                               <span className="text-xs text-muted">Not yet due</span>
                             ) : null}
                           </div>
                           {expandedPeriods.includes(item.key) && (
-                            <div className="mt-3 rounded-xl border border-line bg-soft/40 p-3">
+                            <div className="mt-3 rounded-xl border border-line bg-soft/40 p-3 sm:p-4">
                               {item.payments.length === 0 ? (
                                 <p className="text-xs text-muted">No payment has been recorded for this period yet.</p>
                               ) : (
