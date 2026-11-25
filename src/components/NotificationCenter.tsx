@@ -122,7 +122,7 @@ export function NotificationCenter() {
       {open && (
         <>
           <button className="fixed inset-0 z-40 cursor-default" aria-label="Close notifications" onClick={() => setOpen(false)} />
-          <section className="absolute right-0 top-14 z-50 flex max-h-[min(75vh,620px)] w-[min(92vw,390px)] flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl">
+          <section className="fixed left-3 right-3 top-20 z-50 flex max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:max-h-[min(75vh,620px)] sm:w-[390px]">
             <div className="flex items-center justify-between border-b border-line px-4 py-3">
               <div>
                 <h2 className="font-bold">Notifications</h2>
