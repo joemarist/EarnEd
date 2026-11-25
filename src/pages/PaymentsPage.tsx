@@ -254,7 +254,7 @@ function buildPeriodSummaries(
           ? "Paid"
           : group.received > 0
             ? "Partial"
-            : group.end > todayLocal()
+            : group.dueDate > todayLocal()
               ? "Upcoming"
               : "Unpaid";
       return { ...group, balance, status };
