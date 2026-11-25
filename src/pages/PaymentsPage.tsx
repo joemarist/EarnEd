@@ -602,7 +602,7 @@ export function PaymentsPage() {
                       <td className="px-4 py-4"><Badge status={item.status.toLowerCase()}>{item.status}</Badge></td>
                       <td className="px-4 py-4">
                         {item.balance > 0.005 && item.end <= todayLocal() && item.expected > 0 ? (
-                          <Button size="sm" onClick={() => openRecordModal(item)}>Record amount</Button>
+                          <Button className="min-h-9 px-3 text-xs" onClick={() => openRecordModal(item)}>Record amount</Button>
                         ) : <span className="text-xs text-muted">—</span>}
                       </td>
                     </tr>
