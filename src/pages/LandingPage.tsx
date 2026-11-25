@@ -160,11 +160,9 @@ export function LandingPage() {
                 <Sparkles size={14} /> Made for independent ESL tutors
               </div>
               <h1 className="font-display text-5xl font-extrabold leading-[1.04] tracking-[-0.045em] text-ink sm:text-6xl lg:text-7xl">
-                Teach more.
+                The free income tracker
                 <br />
-                Wonder{" "}
-                <span className="relative text-brand-dark dark:text-brand">
-                  less.
+                for ESL tutors.
                   <svg
                     className="absolute -bottom-2 left-0 w-full"
                     viewBox="0 0 220 12"
@@ -181,8 +179,9 @@ export function LandingPage() {
                 </span>
               </h1>
               <p className="mt-7 max-w-xl text-lg leading-8 text-muted">
-                EarnEd turns your classes, rates, and pay schedules into one clear picture—so you
-                always know what you earned, received, and are still owed.
+                EarnEd is a free income tracker for online ESL tutors. Organize daily classes,
+                workplace rates, pay schedules, and payments in one place—so you always know
+                what you earned, received, and are still owed.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link to="/login" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-dark px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-[#355f1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 sm:w-auto">
