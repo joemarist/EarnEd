@@ -6,6 +6,7 @@ import {
   LockKeyhole,
   Moon,
   ShieldCheck,
+  Sun,
   Trash2,
   UserRound,
   Wallet,
