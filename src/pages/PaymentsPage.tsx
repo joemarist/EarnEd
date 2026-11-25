@@ -147,7 +147,20 @@ function buildPeriodSummaries(
     if (!workplace) continue;
 
     const scheduled = getPayPeriodForDate(log.log_date, workplace);
-    if (!scheduled) continue;
+    if (!scheduled) {
+      // A bi-weekly workplace may not have its one-time anchor configured yet.
+      // Still calculate historical periods that already have saved payment dates.
+      const legacyPayment = payments.find((payment) =>
+        sameWorkplace(payment, workplace) &&
+        log.log_date >= payment.period_start &&
+        log.log_date <= payment.period_end,
+      );
+      if (legacyPayment) {
+        getGroup(workplace, legacyPayment.period_start, legacyPayment.period_end).expected +=
+          Math.max(Number(log.income ?? 0), 0);
+      }
+      continue;
+    }
 
     // Preserve existing manually-entered ranges. New periods are split around
     // legacy ranges so an automatic period can never overlap an existing one.
