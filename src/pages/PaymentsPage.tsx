@@ -284,6 +284,7 @@ export function PaymentsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedPeriods, setExpandedPeriods] = useState<string[]>([]);
+  const [collapsedWorkplaces, setCollapsedWorkplaces] = useState<string[]>([]);
   const [recordingPeriod, setRecordingPeriod] = useState<PeriodSummary | null>(null);
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(true);
@@ -364,6 +365,31 @@ export function PaymentsPage() {
       return matchesWorkplace && matchesStatus && matchesSearch;
     });
   }, [periodSummaries, selected, statusFilter, searchTerm]);
+
+  const periodsByWorkplace = useMemo(() => {
+    const grouped = new Map<string, { workplaceId: string; workplace: string; currency: string; periods: PeriodSummary[] }>();
+    for (const period of filteredPeriods) {
+      const id = period.workplaceId ?? period.workplace;
+      const current = grouped.get(id) ?? {
+        workplaceId: id,
+        workplace: period.workplace,
+        currency: period.currency,
+        periods: [],
+      };
+      current.periods.push(period);
+      grouped.set(id, current);
+    }
+    return Array.from(grouped.values())
+      .map((group) => ({
+        ...group,
+        periods: group.periods.sort((a, b) => b.end.localeCompare(a.end)),
+        expected: group.periods.reduce((sum, period) => sum + period.expected, 0),
+        received: group.periods.reduce((sum, period) => sum + period.received, 0),
+        outstanding: group.periods.reduce((sum, period) => sum + period.balance, 0),
+        unpaidCount: group.periods.filter((period) => period.balance > 0.005).length,
+      }))
+      .sort((a, b) => a.workplace.localeCompare(b.workplace));
+  }, [filteredPeriods]);
 
   useEffect(() => { setCurrentPage(1); }, [selected, statusFilter, searchTerm]);
   const pageSize = 10;
@@ -638,75 +664,119 @@ export function PaymentsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1020px] text-left text-sm">
-              <thead className="bg-soft text-xs uppercase tracking-wide text-muted">
-                <tr>
-                  <th className="px-5 py-3">Workplace</th>
-                  <th className="px-4 py-3">Pay period</th>
-                  <th className="px-4 py-3">Expected</th>
-                  <th className="px-4 py-3">Received</th>
-                  <th className="px-4 py-3">Balance owed</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {paginatedPeriods.map((item) => (
-                  <Fragment key={item.key}>
-                    <tr className="hover:bg-soft/60">
-                      <td className="px-5 py-4">
-                        <button type="button" className="inline-flex items-center gap-2 text-left font-semibold hover:text-brand" onClick={() => setExpandedPeriods((previous) => previous.includes(item.key) ? previous.filter((key) => key !== item.key) : [...previous, item.key])}>
-                          {expandedPeriods.includes(item.key) ? <ChevronDown size={15} /> : <ChevronRight size={15} />}{item.workplace}
-                        </button>
-                      </td>
-                      <td className="px-4 py-4 text-muted">{displayDate(item.start)} – {displayDate(item.end)}<span className="mt-1 block text-xs text-muted">Due {displayDate(item.dueDate)}</span></td>
-                      <td className="px-4 py-4">{formatMoney(item.expected, item.currency)}</td>
-                      <td className="px-4 py-4">{formatMoney(item.received, item.currency)}</td>
-                      <td className={`px-4 py-4 font-bold ${item.balance > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(item.balance, item.currency)}</td>
-                      <td className="px-4 py-4"><Badge status={item.status.toLowerCase()}>{item.status}</Badge></td>
-                      <td className="px-4 py-4">
-                        {item.balance > 0.005 && item.dueDate <= todayLocal() && item.expected > 0 ? (
-                          <Button className="min-h-9 px-3 text-xs" onClick={() => openRecordModal(item)}>Record amount</Button>
-                        ) : <span className="text-xs text-muted">—</span>}
-                      </td>
-                    </tr>
-                    {expandedPeriods.includes(item.key) && (
-                      <tr className="bg-soft/50">
-                        <td colSpan={7} className="px-5 py-4">
-                          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Payment entries ({item.payments.length})</p>
-                          {item.payments.length === 0 ? (
-                            <p className="text-xs text-muted">No payment has been recorded for this period yet.</p>
-                          ) : (
-                            <div className="grid gap-2">
-                              {item.payments.slice().sort((a, b) => b.payment_date.localeCompare(a.payment_date)).map((payment) => (
-                                <div key={payment.id} className="grid gap-1 rounded-lg border border-line bg-surface p-3 text-xs sm:grid-cols-4">
-                                  <span><strong>Date:</strong> {displayDate(payment.payment_date)}</span>
-                                  <span><strong>Amount:</strong> {formatMoney(Number(payment.amount), payment.currency)}</span>
-                                  <span><strong>Method:</strong> {payment.payment_method || "—"}</span>
-                                  <span><strong>Reference:</strong> {payment.reference_number || "—"}</span>
-                                  {payment.notes && <span className="sm:col-span-4"><strong>Notes:</strong> {payment.notes}</span>}
+          <div className="space-y-4 p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-muted">
+                {periodsByWorkplace.length} workplace{periodsByWorkplace.length === 1 ? "" : "s"} · {filteredPeriods.length} pay period{filteredPeriods.length === 1 ? "" : "s"}
+              </p>
+              <div className="flex gap-2">
+                <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setCollapsedWorkplaces(periodsByWorkplace.map((group) => group.workplaceId))}>Collapse all</Button>
+                <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setCollapsedWorkplaces([])}>Expand all</Button>
+              </div>
+            </div>
+            {periodsByWorkplace.map((group) => {
+              const isCollapsed = collapsedWorkplaces.includes(group.workplaceId);
+              return (
+                <section key={group.workplaceId} className="overflow-hidden rounded-2xl border border-line bg-surface">
+                  <button
+                    type="button"
+                    aria-expanded={!isCollapsed}
+                    onClick={() => setCollapsedWorkplaces((previous) => isCollapsed
+                      ? previous.filter((id) => id !== group.workplaceId)
+                      : [...previous, group.workplaceId])}
+                    className="flex w-full flex-col gap-3 bg-soft/60 p-4 text-left transition-colors hover:bg-soft sm:p-5"
+                  >
+                    <div className="flex w-full items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-dark">
+                          <CalendarCheck size={17} />
+                        </span>
+                        <div className="min-w-0">
+                          <h3 className="truncate font-bold">{group.workplace}</h3>
+                          <p className="mt-0.5 text-xs text-muted">
+                            {group.periods.length} pay period{group.periods.length === 1 ? "" : "s"} · {group.unpaidCount} with balance
+                          </p>
+                        </div>
+                      </div>
+                      <span className="flex shrink-0 items-center gap-2 text-xs font-semibold text-muted">
+                        {isCollapsed ? "Show periods" : "Hide periods"}
+                        {isCollapsed ? <ChevronRight size={17} /> : <ChevronDown size={17} />}
+                      </span>
+                    </div>
+                    <div className="grid w-full grid-cols-3 gap-2">
+                      <div className="rounded-xl border border-line/70 bg-surface px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-wide text-muted">Expected</p>
+                        <p className="mt-1 truncate text-sm font-semibold">{formatMoney(group.expected, group.currency)}</p>
+                      </div>
+                      <div className="rounded-xl border border-line/70 bg-surface px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-wide text-muted">Received</p>
+                        <p className="mt-1 truncate text-sm font-semibold">{formatMoney(group.received, group.currency)}</p>
+                      </div>
+                      <div className="rounded-xl border border-line/70 bg-surface px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-wide text-muted">Outstanding</p>
+                        <p className={`mt-1 truncate text-sm font-bold ${group.outstanding > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(group.outstanding, group.currency)}</p>
+                      </div>
+                    </div>
+                  </button>
+                  {!isCollapsed && (
+                    <div className="divide-y divide-line">
+                      {group.periods.map((item) => (
+                        <div key={item.key} className="p-4 sm:p-5">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="font-semibold">{displayDate(item.start)} – {displayDate(item.end)}</p>
+                                <Badge status={item.status.toLowerCase()}>{item.status}</Badge>
+                              </div>
+                              <p className="mt-1 text-xs text-muted">Expected payday: {displayDate(item.dueDate)}</p>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3 text-sm lg:min-w-[390px]">
+                              <div><p className="text-[10px] uppercase tracking-wide text-muted">Expected</p><p className="mt-1 font-semibold">{formatMoney(item.expected, item.currency)}</p></div>
+                              <div><p className="text-[10px] uppercase tracking-wide text-muted">Received</p><p className="mt-1 font-semibold">{formatMoney(item.received, item.currency)}</p></div>
+                              <div><p className="text-[10px] uppercase tracking-wide text-muted">Balance</p><p className={`mt-1 font-bold ${item.balance > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(item.balance, item.currency)}</p></div>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                            <button
+                              type="button"
+                              className="text-xs font-medium text-brand hover:underline"
+                              aria-expanded={expandedPeriods.includes(item.key)}
+                              onClick={() => setExpandedPeriods((previous) => previous.includes(item.key) ? previous.filter((key) => key !== item.key) : [...previous, item.key])}
+                            >
+                              {expandedPeriods.includes(item.key) ? "Hide payment history" : `Payment history (${item.payments.length})`}
+                            </button>
+                            {item.balance > 0.005 && item.dueDate <= todayLocal() && item.expected > 0 ? (
+                              <Button className="min-h-10 px-4 text-xs" onClick={() => openRecordModal(item)}>Record amount</Button>
+                            ) : item.status === "Upcoming" ? (
+                              <span className="text-xs text-muted">Not yet due</span>
+                            ) : null}
+                          </div>
+                          {expandedPeriods.includes(item.key) && (
+                            <div className="mt-3 rounded-xl border border-line bg-soft/40 p-3">
+                              {item.payments.length === 0 ? (
+                                <p className="text-xs text-muted">No payment has been recorded for this period yet.</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {item.payments.slice().sort((a, b) => b.payment_date.localeCompare(a.payment_date)).map((payment) => (
+                                    <div key={payment.id} className="grid gap-2 rounded-lg border border-line bg-surface p-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
+                                      <span><strong>Date:</strong> {displayDate(payment.payment_date)}</span>
+                                      <span><strong>Amount:</strong> {formatMoney(Number(payment.amount), payment.currency)}</span>
+                                      <span><strong>Method:</strong> {payment.payment_method || "—"}</span>
+                                      <span><strong>Reference:</strong> {payment.reference_number || "—"}</span>
+                                      {payment.notes && <span className="sm:col-span-2 lg:col-span-4"><strong>Notes:</strong> {payment.notes}</span>}
+                                    </div>
+                                  ))}
                                 </div>
-                              ))}
+                              )}
                             </div>
                           )}
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {filteredPeriods.length > 0 && (
-          <div className="flex flex-col items-center justify-between gap-3 border-t border-line px-5 py-4 text-sm sm:flex-row">
-            <p className="text-xs text-muted">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredPeriods.length)} of {filteredPeriods.length} pay periods</p>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" disabled={currentPage === 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}>Previous</Button>
-              <span className="text-xs text-muted">Page {currentPage} of {pageCount}</span>
-              <Button variant="secondary" disabled={currentPage >= pageCount} onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}>Next</Button>
-            </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
           </div>
         )}
       </Card>
