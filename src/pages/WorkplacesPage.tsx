@@ -28,6 +28,7 @@ type Workplace = {
   cutoff_rule: string;
   archived: boolean;
   cutoff_day_of_week: number | null;
+  pay_cycle_anchor_date: string | null;
   payday_type: "day_of_week" | "day_of_month" | "days_after_cutoff" | "no_fixed_date";
   payday_day_of_week: number | null;
   payday_day_of_month: number | null;
@@ -44,6 +45,7 @@ type WorkplaceFormValues = {
   payday: string;
   cutoff_rule: string;
   cutoff_day_of_week: number | null;
+  pay_cycle_anchor_date: string | null;
   payday_type: "day_of_week" | "day_of_month" | "days_after_cutoff" | "no_fixed_date";
   payday_day_of_week: number | null;
   payday_day_of_month: number | null;
@@ -137,6 +139,7 @@ export function WorkplacesPage() {
       payday: values.payday,
       cutoff_rule: values.cutoff_rule,
       cutoff_day_of_week: values.cutoff_day_of_week,
+      pay_cycle_anchor_date: values.pay_cycle_anchor_date,
       payday_type: values.payday_type,
       payday_day_of_week: values.payday_day_of_week,
       payday_day_of_month: values.payday_day_of_month,
@@ -423,6 +426,9 @@ function WorkplaceModal({
   const [cutoffRule, setCutoffRule] = useState(
     item?.cutoff_rule ?? "End of month",
   );
+  const [payCycleAnchorDate, setPayCycleAnchorDate] = useState(
+    item?.pay_cycle_anchor_date ?? "",
+  );
   const hasLegacyPayday =
     Boolean(item?.payday) &&
     item?.payday !== "No fixed payday" &&
@@ -494,6 +500,11 @@ function WorkplaceModal({
       return;
     }
 
+    if (schedule === "Bi-weekly" && !payCycleAnchorDate) {
+      setError("Please set the first day of a known 14-day pay cycle for this workplace.");
+      return;
+    }
+
     if (
       paydayType === "day_of_month" &&
       (!Number.isInteger(Number(paydayMonthDay)) ||
@@ -527,6 +538,7 @@ function WorkplaceModal({
         payday: getPaydayDescription(),
         cutoff_rule: getCutoffDescription(),
         cutoff_day_of_week: isWeeklySchedule ? Number(cutoffDay) : null,
+        pay_cycle_anchor_date: schedule === "Bi-weekly" ? payCycleAnchorDate : null,
         payday_type: paydayType === "legacy" ? "no_fixed_date" : paydayType,
         payday_day_of_week:
           paydayType === "day_of_week" ? Number(paydayWeekday) : null,
@@ -667,6 +679,22 @@ function WorkplaceModal({
                   <option value="End of month">End of month</option>
                 </Select>
               </div>
+            )}
+
+            {schedule === "Bi-weekly" && (
+              <label className="text-sm font-semibold sm:col-span-2">
+                First day of a known 14-day pay period
+                <HelpTip text="Choose the first day of a real pay cycle from your workplace's schedule. EarnEd uses this one-time date to keep every 14-day period aligned correctly." />
+                <Input
+                  type="date"
+                  value={payCycleAnchorDate}
+                  onChange={(event) => setPayCycleAnchorDate(event.target.value)}
+                  className="mt-2"
+                />
+                <span className="mt-1 block text-xs font-normal text-muted">
+                  Set this once. You won't need to enter pay-period dates when recording payments.
+                </span>
+              </label>
             )}
 
             <div className="sm:col-span-2">
