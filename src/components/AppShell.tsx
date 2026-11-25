@@ -78,6 +78,19 @@ export function AppShell() {
   const [hasSession, setHasSession] = useState(false);
   const [userFirstName, setUserFirstName] = useState("User");
   const [userAvatar, setUserAvatar] = useState("");
+
+  async function loadUserAvatar(userId: string, fallback = "") {
+    setUserAvatar(fallback);
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("avatar_path, updated_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profile?.avatar_path) {
+      const publicUrl = supabase.storage.from("avatars").getPublicUrl(profile.avatar_path).data.publicUrl;
+      setUserAvatar(`${publicUrl}?v=${encodeURIComponent(profile.updated_at || Date.now())}`);
+    }
+  }
   const [showSupport, setShowSupport] = useState(false);
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
   const location = useLocation();
@@ -132,7 +145,14 @@ export function AppShell() {
         "";
 
       setUserFirstName(fullName.split(" ")[0] || "User");
-      setUserAvatar(data.session?.user.user_metadata?.avatar_url || data.session?.user.user_metadata?.picture || "");
+      if (data.session?.user.id) {
+        void loadUserAvatar(
+          data.session.user.id,
+          data.session.user.user_metadata?.avatar_url || data.session.user.user_metadata?.picture || "",
+        );
+      } else {
+        setUserAvatar("");
+      }
       setTimezone(data.session?.user.user_metadata?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
       setSessionChecked(true);
     }
@@ -149,7 +169,14 @@ export function AppShell() {
           "";
 
         setUserFirstName(fullName.split(" ")[0] || "User");
-        setUserAvatar(session?.user.user_metadata?.avatar_url || session?.user.user_metadata?.picture || "");
+        if (session?.user.id) {
+          void loadUserAvatar(
+            session.user.id,
+            session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
+          );
+        } else {
+          setUserAvatar("");
+        }
         setTimezone(session?.user.user_metadata?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
         setSessionChecked(true);
       }
