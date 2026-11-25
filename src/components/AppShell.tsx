@@ -10,9 +10,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Moon,
   Settings,
-  Sun,
   UserRound,
   X,
 } from "lucide-react";
@@ -33,24 +31,6 @@ const primaryNav = [
   { to: "/app/workplaces", label: "Workplaces", icon: BriefcaseBusiness },
   { to: "/app/tutorials", label: "Tutorials & Tips", icon: BookOpen },
 ];
-
-function ThemeButton() {
-  const [dark, setDark] = useState(() => localStorage.getItem("earned-theme") === "dark");
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-    localStorage.setItem("earned-theme", dark ? "dark" : "light");
-  }, [dark]);
-  return (
-    <Button
-      variant="ghost"
-      className="h-11 w-11 border border-line bg-surface px-0 shadow-sm hover:bg-soft"
-      onClick={() => setDark(!dark)}
-      aria-label="Toggle dark mode"
-    >
-      {dark ? <Sun size={21} strokeWidth={2.2} /> : <Moon size={21} strokeWidth={2.2} />}
-    </Button>
-  );
-}
 
 function HeaderGreeting({ timezone, firstName }: { timezone: string; firstName: string }) {
   const [now, setNow] = useState(() => new Date());
@@ -270,7 +250,6 @@ export function AppShell() {
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <LiveClock timezone={safeTimezone} />
             <NotificationCenter />
-            <ThemeButton />
             <NavLink
               to="/app/account"
               aria-label="Open profile and account settings"
