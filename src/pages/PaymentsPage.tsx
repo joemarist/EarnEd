@@ -666,7 +666,7 @@ export function PaymentsPage() {
               </p>
               <div className="flex w-full gap-2 sm:w-auto">
                 <Button variant="ghost" className="min-h-10 flex-1 px-3 text-xs sm:flex-none" onClick={() => setCollapsedWorkplaces(periodsByWorkplace.map((group) => group.workplaceId))}>Collapse all</Button>
-                <Button variant="ghost" className="min-h-10 flex-1 px-3 text-xs min-[420px]:flex-none" onClick={() => setCollapsedWorkplaces([])}>Expand all</Button>
+                <Button variant="ghost" className="min-h-10 flex-1 px-3 text-xs sm:flex-none" onClick={() => setCollapsedWorkplaces([])}>Expand all</Button>
               </div>
             </div>
             {periodsByWorkplace.map((group) => {
@@ -693,8 +693,8 @@ export function PaymentsPage() {
                           </p>
                         </div>
                       </div>
-                      <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-muted sm:gap-2 sm:text-xs">
-                        {isCollapsed ? "Show periods" : "Hide periods"}
+                      <span className="flex shrink-0 items-center gap-1 text-[10px] font-semibold text-muted sm:gap-2 sm:text-xs">
+                        <span className="sm:hidden">{isCollapsed ? "Show" : "Hide"}</span><span className="hidden sm:inline">{isCollapsed ? "Show periods" : "Hide periods"}</span>
                         {isCollapsed ? <ChevronRight size={17} /> : <ChevronDown size={17} />}
                       </span>
                     </div>
@@ -705,11 +705,11 @@ export function PaymentsPage() {
                       </div>
                       <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-line/70 bg-surface px-3 py-3 sm:block sm:py-2">
                         <p className="text-[10px] uppercase tracking-wide text-muted">Received</p>
-                        <p className="truncate text-sm font-semibold min-[390px]:mt-1">{formatMoney(group.received, group.currency)}</p>
+                        <p className="break-all text-right text-sm font-semibold sm:mt-1 sm:text-left">{formatMoney(group.received, group.currency)}</p>
                       </div>
-                      <div className="rounded-xl border border-line/70 bg-surface px-3 py-2">
+                      <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-line/70 bg-surface px-3 py-3 sm:block sm:py-2">
                         <p className="text-[10px] uppercase tracking-wide text-muted">Outstanding</p>
-                        <p className={`break-all text-right text-sm font-bold sm:text-left min-[390px]:mt-1 ${group.outstanding > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(group.outstanding, group.currency)}</p>
+                        <p className={`break-all text-right text-sm font-bold sm:text-left sm:mt-1 ${group.outstanding > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(group.outstanding, group.currency)}</p>
                       </div>
                     </div>
                   </button>
