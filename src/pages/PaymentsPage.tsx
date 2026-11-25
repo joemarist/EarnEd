@@ -284,6 +284,7 @@ export function PaymentsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedPeriods, setExpandedPeriods] = useState<string[]>([]);
   const [collapsedWorkplaces, setCollapsedWorkplaces] = useState<string[]>([]);
+  const [showSettledPeriods, setShowSettledPeriods] = useState<string[]>([]);
   const [recordingPeriod, setRecordingPeriod] = useState<PeriodSummary | null>(null);
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(true);
@@ -715,7 +716,7 @@ export function PaymentsPage() {
                   </button>
                   {!isCollapsed && (
                     <div className="divide-y divide-line">
-                      {group.periods.map((item) => (
+                      {group.periods.filter((item) => item.status !== "Paid" || showSettledPeriods.includes(group.workplaceId)).map((item) => (
                         <div key={item.key} className="min-w-0 p-4 sm:p-5">
                           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div className="min-w-0">
@@ -767,6 +768,22 @@ export function PaymentsPage() {
                           )}
                         </div>
                       ))}
+                      {group.periods.some((item) => item.status === "Paid") && (
+                        <div className="border-t border-line bg-soft/30 p-3 sm:px-5">
+                          <button
+                            type="button"
+                            aria-expanded={showSettledPeriods.includes(group.workplaceId)}
+                            onClick={() => setShowSettledPeriods((previous) =>
+                              previous.includes(group.workplaceId)
+                                ? previous.filter((id) => id !== group.workplaceId)
+                                : [...previous, group.workplaceId])}
+                            className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-3 text-left text-sm font-semibold text-muted transition hover:bg-soft hover:text-ink"
+                          >
+                            <span>{showSettledPeriods.includes(group.workplaceId) ? "Hide settled periods" : `View settled periods (${group.periods.filter((item) => item.status === "Paid").length})`}</span>
+                            {showSettledPeriods.includes(group.workplaceId) ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </section>
