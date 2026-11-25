@@ -14,7 +14,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Brand } from "../components/Brand";
 import { Button, Card } from "../components/ui";
@@ -78,6 +78,15 @@ export function LandingPage() {
   const [profileUnwrapped, setProfileUnwrapped] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
+  useEffect(() => {
+    if (!mobileNav) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileNav]);
+
   return (
     <div className="min-h-screen overflow-hidden bg-canvas text-ink">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-line/80 bg-canvas/90 backdrop-blur-xl">
@@ -111,13 +120,13 @@ export function LandingPage() {
           <Button
             type="button"
             variant="ghost"
-            className="h-10 w-10 px-0 md:hidden"
+            className="h-12 w-12 min-h-12 min-w-12 px-0 md:hidden"
             onClick={() => setMobileNav(!mobileNav)}
             aria-label={mobileNav ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileNav}
             aria-controls="landing-mobile-navigation"
           >
-            {mobileNav ? <X size={20} /> : <Menu size={20} />}
+            {mobileNav ? <X size={24} strokeWidth={2.4} /> : <Menu size={24} strokeWidth={2.4} />}
           </Button>
         </div>
         <div id="landing-mobile-navigation" hidden={!mobileNav} className="border-t border-line bg-surface p-4 md:hidden">
