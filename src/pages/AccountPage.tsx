@@ -81,6 +81,14 @@ export function AccountPage() {
   const [defaultCurrency, setDefaultCurrency] = useState("USD");
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
   const [reminders, setReminders] = useState<ReminderPreferences>(defaultReminders);
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return localStorage.getItem("earned-theme") === "dark"; } catch { return false; }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    try { localStorage.setItem("earned-theme", darkMode ? "dark" : "light"); } catch { /* Theme still applies for this session. */ }
+  }, [darkMode]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
