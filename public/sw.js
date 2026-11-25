@@ -33,8 +33,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache only versioned build assets and images. Never cache API/auth responses.
-  const isStaticAsset = /\\.(?:js|css|png|jpe?g|webp|svg|ico|woff2?)$/i.test(url.pathname);
+  // Cache only static assets. Never cache API/auth responses.
+  const isStaticAsset = /\.(?:js|css|png|jpe?g|webp|svg|ico|woff2?)$/i.test(url.pathname);
   if (!isStaticAsset) return;
 
   event.respondWith(
