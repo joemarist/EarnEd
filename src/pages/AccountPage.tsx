@@ -540,14 +540,29 @@ export function AccountPage() {
 
           <Card className="p-5 sm:p-6">
             <div className="flex items-center gap-3">
-              <Moon size={20} className="text-brand" />
-              <div>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                {darkMode ? <Moon size={19} /> : <Sun size={19} />}
+              </span>
+              <div className="min-w-0">
                 <h2 className="font-bold">Appearance</h2>
-                <p className="text-xs text-muted">Change the theme using the moon or sun button in the top navigation.</p>
+                <p className="text-xs text-muted">Choose how EarnEd looks on this device</p>
               </div>
             </div>
-            <div className="mt-4 rounded-xl bg-soft p-4 text-sm text-muted">
-              Your current theme preference is managed by the app header on this device.
+            <div className="mt-4 flex flex-col gap-3 rounded-xl border border-line bg-soft/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{darkMode ? "Dark mode is on" : "Light mode is on"}</p>
+                <p className="mt-1 text-xs text-muted">Your preference is saved automatically on this device.</p>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full justify-center sm:w-auto"
+                onClick={() => setDarkMode((current) => !current)}
+                aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+                Switch to {darkMode ? "light" : "dark"} mode
+              </Button>
             </div>
           </Card>
 
