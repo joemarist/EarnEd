@@ -179,6 +179,11 @@ function buildPeriodSummaries(
   };
 
   for (const log of logs) {
+    // A saved Daily Log only qualifies for a pay period when it records
+    // at least one completed class. Empty/zero-class entries must not create
+    // otherwise misleading payment periods.
+    if (Number(log.classes ?? 0) <= 0) continue;
+
     const workplace = workplaces.find((item) =>
       item.id === log.workplace_id || (!log.workplace_id && item.name === log.workplace),
     );
@@ -238,10 +243,16 @@ function buildPeriodSummaries(
 
   for (const payment of payments) {
     const workplace = workplaces.find((item) => item.id === payment.workplace_id) ??
-      workplaces.find((item) => item.name === payment.workplace_name);
+      workplaces.find((item) => !payment.workplace_id && item.name === payment.workplace_name);
     if (!workplace) continue;
 
-    const group = getGroup(workplace, payment.period_start, payment.period_end);
+    // Attach saved payments only to a period that was generated from at least
+    // one qualifying Daily Log. Do not create an automatic period from a
+    // payment record alone when no class entry exists for that workplace.
+    const key = [workplace.id, payment.period_start, payment.period_end].join("|");
+    const group = groups.get(key);
+    if (!group) continue;
+
     group.received += Number(payment.amount ?? 0);
     group.payments.push(payment);
   }
@@ -378,11 +389,12 @@ export function PaymentsPage() {
     };
 
     for (const log of logs) {
+      if (Number(log.classes ?? 0) <= 0) continue;
       const currency =
         workplaces.find((item) => item.id === log.workplace_id)?.currency ??
-        workplaces.find((item) => item.name === log.workplace)?.currency ??
+        workplaces.find((item) => !log.workplace_id && item.name === log.workplace)?.currency ??
         "USD";
-      add(currency, "earned", Number(log.income ?? 0));
+      add(currency, "earned", Math.max(Number(log.income ?? 0), 0));
     }
     for (const payment of payments) add(payment.currency || "USD", "received", Number(payment.amount ?? 0));
     for (const period of periodSummaries) add(period.currency, "outstanding", period.balance);
@@ -435,7 +447,7 @@ export function PaymentsPage() {
       const [latestLogsResult, latestPaymentsResult] = await Promise.all([
         supabase
           .from("daily_logs")
-          .select("id, workplace_id, workplace, log_date, income")
+          .select("id, workplace_id, workplace, log_date, classes, income")
           .eq("user_id", signedInUser.id)
           .gte("log_date", recordingPeriod.start)
           .lte("log_date", recordingPeriod.end),
@@ -452,7 +464,9 @@ export function PaymentsPage() {
       const latestLogs = (latestLogsResult.data ?? []) as DailyLog[];
       const latestPayments = (latestPaymentsResult.data ?? []) as Payment[];
       const latestExpected = latestLogs.reduce((total, log) =>
-        sameWorkplace(log, workplace) ? total + Number(log.income ?? 0) : total, 0);
+        sameWorkplace(log, workplace) && Number(log.classes ?? 0) > 0
+          ? total + Math.max(Number(log.income ?? 0), 0)
+          : total, 0);
       const latestReceived = latestPayments.reduce((total, payment) =>
         sameWorkplace(payment, workplace) ? total + Number(payment.amount ?? 0) : total, 0);
       const latestRemaining = Math.max(latestExpected - latestReceived, 0);
