@@ -162,21 +162,7 @@ export function LandingPage() {
               <h1 className="font-display text-5xl font-extrabold leading-[1.04] tracking-[-0.045em] text-ink sm:text-6xl lg:text-7xl">
                 The free income tracker
                 <br />
-                for ESL tutors.
-                  <svg
-                    className="absolute -bottom-2 left-0 w-full"
-                    viewBox="0 0 220 12"
-                    fill="none"
-                  >
-                    <path
-                      d="M3 9C65 2 136 2 217 5"
-                      stroke="currentColor"
-                      strokeWidth="5"
-                      strokeLinecap="round"
-                      opacity=".3"
-                    />
-                  </svg>
-                </span>
+                <span className="text-brand-dark dark:text-brand">for ESL tutors.</span>
               </h1>
               <p className="mt-7 max-w-xl text-lg leading-8 text-muted">
                 EarnEd is a free income tracker for online ESL tutors. Organize daily classes,
