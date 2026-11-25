@@ -490,7 +490,7 @@ export function AccountPage() {
                 </label>
               ))}
             </div>
-            <p className="text-xs text-muted">Your choices are saved to your account. Email delivery will activate after the EarnEd email service is configured and verified.</p>
+            <p className="text-xs text-muted">Your choices are saved to your account. Email reminders are sent to your verified account email when enabled.</p>
             <Button className="mt-4" variant="secondary" onClick={handleSaveChanges} disabled={saving}>{saving ? "Saving..." : "Save reminder preferences"}</Button>
           </Card>
 
