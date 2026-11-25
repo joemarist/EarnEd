@@ -173,8 +173,8 @@ export function AppShell() {
       >
         <div className="flex items-center justify-between px-2 py-2">
           <Brand />
-          <Button variant="ghost" className="h-9 w-9 px-0 lg:hidden" onClick={() => setOpen(false)}>
-            <X size={18} />
+          <Button variant="ghost" className="h-11 w-11 shrink-0 px-0 lg:hidden" onClick={() => setOpen(false)}>
+            <X size={21} />
           </Button>
         </div>
         <nav className="mt-5 flex-1 space-y-1 overflow-y-auto">
@@ -185,7 +185,7 @@ export function AppShell() {
               end={end}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${isActive ? "bg-brand-dark text-white shadow-sm dark:bg-brand dark:text-[#14200f]" : "text-muted hover:bg-soft hover:text-ink"}`
+                `flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${isActive ? "bg-brand-dark text-white shadow-sm dark:bg-brand dark:text-[#14200f]" : "text-muted hover:bg-soft hover:text-ink"}`
               }
             >
               <Icon size={18} strokeWidth={2} />
@@ -223,10 +223,10 @@ export function AppShell() {
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              className="h-10 w-10 px-0 lg:hidden"
+              className="h-12 w-12 shrink-0 px-0 lg:hidden"
               onClick={() => setOpen(true)}
             >
-              <Menu size={20} />
+              <Menu size={22} />
             </Button>
             <HeaderGreeting timezone={safeTimezone} firstName={userFirstName} />
           </div>
@@ -259,18 +259,18 @@ export function AppShell() {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 rounded-lg py-1.5 text-[10px] font-semibold ${isActive ? "text-brand-dark dark:text-brand" : "text-muted"}`
+              `flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 py-1.5 text-[10px] font-semibold ${isActive ? "text-brand-dark dark:text-brand" : "text-muted"}`
             }
           >
-            <Icon size={19} />
+            <Icon size={21} />
             {label}
           </NavLink>
         ))}
         <button
           onClick={() => setOpen(true)}
-          className="flex flex-col items-center gap-1 rounded-lg py-1.5 text-[10px] font-semibold text-muted"
+          className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 py-1.5 text-[10px] font-semibold text-muted"
         >
-          <Menu size={19} />
+          <Menu size={22} />
           More
         </button>
       </nav>
