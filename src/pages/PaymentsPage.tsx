@@ -24,6 +24,10 @@ type Workplace = {
   cutoff_rule: string;
   cutoff_day_of_week: number | null;
   pay_cycle_anchor_date: string | null;
+  payday_type: "day_of_week" | "day_of_month" | "days_after_cutoff" | "no_fixed_date";
+  payday_day_of_week: number | null;
+  payday_day_of_month: number | null;
+  payday_offset_days: number | null;
 };
 
 type DailyLog = {
@@ -57,6 +61,7 @@ type PeriodSummary = {
   currency: string;
   start: string;
   end: string;
+  dueDate: string;
   expected: number;
   received: number;
   payments: Payment[];
@@ -110,6 +115,38 @@ function addDateDays(value: string, days: number) {
   ].join("-");
 }
 
+function getPaymentDueDate(periodEnd: string, workplace: Workplace) {
+  const [year, month, day] = periodEnd.split("-").map(Number);
+  const endDate = new Date(Date.UTC(year, month - 1, day));
+
+  if (workplace.payday_type === "days_after_cutoff") {
+    return addDateDays(periodEnd, Math.max(workplace.payday_offset_days ?? 0, 0));
+  }
+
+  if (workplace.payday_type === "day_of_week") {
+    const targetDay = workplace.payday_day_of_week ?? 5;
+    const currentDay = endDate.getUTCDay() || 7;
+    let offset = (targetDay - currentDay + 7) % 7;
+    if (offset === 0) offset = 7;
+    return addDateDays(periodEnd, offset);
+  }
+
+  if (workplace.payday_type === "day_of_month") {
+    const targetDay = workplace.payday_day_of_month ?? 15;
+    const dueMonth = targetDay >= day ? month - 1 : month;
+    const dueYear = year + Math.floor(dueMonth / 12);
+    const normalizedMonth = (dueMonth + 12) % 12;
+    const lastDay = new Date(Date.UTC(dueYear, normalizedMonth + 1, 0)).getUTCDate();
+    return [
+      dueYear,
+      String(normalizedMonth + 1).padStart(2, "0"),
+      String(Math.min(targetDay, lastDay)).padStart(2, "0"),
+    ].join("-");
+  }
+
+  return periodEnd;
+}
+
 function buildPeriodSummaries(
   logs: DailyLog[],
   payments: Payment[],
@@ -130,6 +167,7 @@ function buildPeriodSummaries(
         currency: workplace.currency || "USD",
         start,
         end,
+        dueDate: getPaymentDueDate(end, workplace),
         expected: 0,
         received: 0,
         payments: [],
@@ -259,7 +297,7 @@ export function PaymentsPage() {
         const [workplaceResult, logResult, paymentResult] = await Promise.all([
           supabase
             .from("workplaces")
-            .select("id, name, currency, archived, schedule, cutoff_rule, cutoff_day_of_week, pay_cycle_anchor_date")
+            .select("id, name, currency, archived, schedule, cutoff_rule, cutoff_day_of_week, pay_cycle_anchor_date, payday_type, payday_day_of_week, payday_day_of_month, payday_offset_days")
             .eq("user_id", sessionData.session.user.id)
             .order("created_at", { ascending: true }),
           supabase
@@ -324,7 +362,7 @@ export function PaymentsPage() {
   const nextDuePeriods = useMemo(() => {
     const byWorkplace = new Map<string, PeriodSummary>();
     for (const period of periodSummaries) {
-      if (!period.workplaceId || period.balance <= 0.005 || period.end > todayLocal()) continue;
+      if (!period.workplaceId || period.balance <= 0.005 || period.dueDate > todayLocal()) continue;
       const current = byWorkplace.get(period.workplaceId);
       if (!current || period.start < current.start) byWorkplace.set(period.workplaceId, period);
     }
@@ -381,7 +419,7 @@ export function PaymentsPage() {
       return;
     }
     if (recordingPeriod.end > todayLocal()) {
-      setSaveError("This pay period has not reached its cut-off date yet.");
+      setSaveError("This workplace's expected payday has not arrived yet.");
       return;
     }
 
@@ -608,13 +646,13 @@ export function PaymentsPage() {
                           {expandedPeriods.includes(item.key) ? <ChevronDown size={15} /> : <ChevronRight size={15} />}{item.workplace}
                         </button>
                       </td>
-                      <td className="px-4 py-4 text-muted">{displayDate(item.start)} – {displayDate(item.end)}</td>
+                      <td className="px-4 py-4 text-muted">{displayDate(item.start)} – {displayDate(item.end)}<span className="mt-1 block text-xs text-muted">Due {displayDate(item.dueDate)}</span></td>
                       <td className="px-4 py-4">{formatMoney(item.expected, item.currency)}</td>
                       <td className="px-4 py-4">{formatMoney(item.received, item.currency)}</td>
                       <td className={`px-4 py-4 font-bold ${item.balance > 0.005 ? "text-amber-600" : "text-emerald-600"}`}>{formatMoney(item.balance, item.currency)}</td>
                       <td className="px-4 py-4"><Badge status={item.status.toLowerCase()}>{item.status}</Badge></td>
                       <td className="px-4 py-4">
-                        {item.balance > 0.005 && item.end <= todayLocal() && item.expected > 0 ? (
+                        {item.balance > 0.005 && item.dueDate <= todayLocal() && item.expected > 0 ? (
                           <Button className="min-h-9 px-3 text-xs" onClick={() => openRecordModal(item)}>Record amount</Button>
                         ) : <span className="text-xs text-muted">—</span>}
                       </td>
@@ -687,7 +725,7 @@ export function PaymentsPage() {
 
             <div className="mt-4 rounded-xl border border-line bg-soft/60 p-3">
               <p className="font-semibold">{recordingPeriod.workplace}</p>
-              <p className="mt-1 text-xs text-muted">{displayDate(recordingPeriod.start)} – {displayDate(recordingPeriod.end)}</p>
+              <p className="mt-1 text-xs text-muted">{displayDate(recordingPeriod.start)} – {displayDate(recordingPeriod.end)}</p><p className="mt-1 text-xs text-muted">Expected payday: {displayDate(recordingPeriod.dueDate)}</p>
               <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <div><p className="text-xs text-muted">Expected</p><p className="mt-1 font-semibold">{formatMoney(recordingPeriod.expected, recordingPeriod.currency)}</p></div>
                 <div><p className="text-xs text-muted">Already received</p><p className="mt-1 font-semibold">{formatMoney(recordingPeriod.received, recordingPeriod.currency)}</p></div>
