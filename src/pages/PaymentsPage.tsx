@@ -9,7 +9,7 @@ import {
   Search,
   TrendingUp,
 } from "lucide-react";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Input, PageHeader, Select } from "../components/ui";
 import { getPayPeriodForDate } from "../lib/paymentPeriods";
 import { supabase } from "../lib/supabase";
@@ -282,7 +282,6 @@ export function PaymentsPage() {
   const [selected, setSelected] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
   const [expandedPeriods, setExpandedPeriods] = useState<string[]>([]);
   const [collapsedWorkplaces, setCollapsedWorkplaces] = useState<string[]>([]);
   const [recordingPeriod, setRecordingPeriod] = useState<PeriodSummary | null>(null);
@@ -390,11 +389,6 @@ export function PaymentsPage() {
       }))
       .sort((a, b) => a.workplace.localeCompare(b.workplace));
   }, [filteredPeriods]);
-
-  useEffect(() => { setCurrentPage(1); }, [selected, statusFilter, searchTerm]);
-  const pageSize = 10;
-  const pageCount = Math.max(1, Math.ceil(filteredPeriods.length / pageSize));
-  const paginatedPeriods = filteredPeriods.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const nextDuePeriods = useMemo(() => {
     const byWorkplace = new Map<string, PeriodSummary>();
