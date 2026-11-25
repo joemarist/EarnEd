@@ -67,6 +67,14 @@ const faqs = [
     "Spreadsheet import is not available yet. You can enter classes in Daily Log and export your records from Reports or Settings & Account.",
   ],
   [
+    "Is EarnEd free to use?",
+    "Yes. You can use EarnEd's income-tracking features for free. Optional support helps fund ongoing development, but it is not required.",
+  ],
+  [
+    "Can I use EarnEd on my phone?",
+    "Yes. EarnEd is designed for mobile and desktop browsers, so you can log classes and review your income while on the go.",
+  ],
+  [
     "Does EarnEd handle taxes?",
     "EarnEd organizes income records and exports, but it does not replace advice from a qualified tax professional.",
   ],
