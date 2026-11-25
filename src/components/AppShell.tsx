@@ -95,6 +95,15 @@ export function AppShell() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  useEffect(() => {
     if (!hasSession) return;
     try {
       if (localStorage.getItem("earned-support-prompt-seen") === "1") return;
