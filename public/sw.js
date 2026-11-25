@@ -1,9 +1,7 @@
-const CACHE = "earned-ui-v1";
-const APP_SHELL = ["/", "/app", "/manifest.webmanifest", "/brand/earned-mark.png"];
+const CACHE = "earned-static-v2";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)));
-  self.skipWaiting();
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", (event) => {
@@ -11,13 +9,44 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
-      ),
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith("earned-") && key !== CACHE)
+            .map((key) => caches.delete(key)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+  const request = event.request;
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Always fetch the latest app document. Caching "/" or "/app" can leave
+  // users on an old HTML shell that points to JavaScript chunks no longer deployed.
+  if (request.mode === "navigate" || url.pathname === "/sw.js") {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Cache only versioned build assets and images. Never cache API/auth responses.
+  const isStaticAsset = /\\.(?:js|css|png|jpe?g|webp|svg|ico|woff2?)$/i.test(url.pathname);
+  if (!isStaticAsset) return;
+
+  event.respondWith(
+    caches.open(CACHE).then(async (cache) => {
+      const cached = await cache.match(request);
+      if (cached) return cached;
+
+      const response = await fetch(request);
+      if (response.ok && response.type === "basic") {
+        await cache.put(request, response.clone());
+      }
+      return response;
+    }),
+  );
 });
