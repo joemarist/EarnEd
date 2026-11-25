@@ -64,6 +64,10 @@ export function NotificationCenter() {
     let active = true;
     supabase.auth.getUser().then(({ data }) => {
       if (!active || !data.user) return;
+      void supabase.functions.invoke("generate-notifications").then(({ error }) => {
+        if (error) console.warn("EarnEd notification check was unavailable.", error.message);
+        if (active) void loadNotifications();
+      });
       channel = supabase.channel(`notifications-${data.user.id}`)
         .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${data.user.id}` }, () => {
           void loadNotifications();
