@@ -20,6 +20,8 @@ type ReminderPreferences = {
   overdue: boolean;
   monthly: boolean;
   goals: boolean;
+  in_app_enabled: boolean;
+  email_enabled: boolean;
 };
 
 const defaultReminders: ReminderPreferences = {
@@ -27,6 +29,8 @@ const defaultReminders: ReminderPreferences = {
   overdue: true,
   monthly: true,
   goals: false,
+  in_app_enabled: true,
+  email_enabled: false,
 };
 
 const currencies = [
@@ -118,7 +122,12 @@ export function AccountPage() {
           setAvatarUrl(storedAvatar || metadata.avatar_url || metadata.picture || "");
           setDefaultCurrency(metadata.default_currency || "USD");
           setTimezone(metadata.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
-          setReminders({ ...defaultReminders, ...(metadata.reminder_preferences ?? {}) });
+          const { data: savedPreferences } = await supabase
+            .from("notification_preferences")
+            .select("payday, overdue, monthly, goals, in_app_enabled, email_enabled")
+            .eq("user_id", data.user.id)
+            .maybeSingle();
+          setReminders({ ...defaultReminders, ...(metadata.reminder_preferences ?? {}), ...(savedPreferences ?? {}) });
         }
       } catch (error) {
         if (active) setPageError(error instanceof Error ? error.message : "We could not load your account.");
@@ -142,15 +151,28 @@ export function AccountPage() {
         name: fullName.trim(),
         default_currency: defaultCurrency,
         timezone,
-        reminder_preferences: reminders,
+        reminder_preferences: { payday: reminders.payday, overdue: reminders.overdue, monthly: reminders.monthly, goals: reminders.goals },
       },
     });
 
     if (error) {
       setPageError(error.message);
     } else {
-      setUser(data.user);
-      setSaved(true);
+      const { error: preferencesError } = await supabase.from("notification_preferences").upsert({
+        user_id: data.user.id,
+        payday: reminders.payday,
+        overdue: reminders.overdue,
+        monthly: reminders.monthly,
+        goals: reminders.goals,
+        in_app_enabled: reminders.in_app_enabled,
+        email_enabled: reminders.email_enabled,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+      if (preferencesError) setPageError(preferencesError.message);
+      else {
+        setUser(data.user);
+        setSaved(true);
+      }
     }
     setSaving(false);
   }
@@ -419,7 +441,23 @@ export function AccountPage() {
                 <p className="text-xs text-muted">Choose which reminders you would like EarnEd to support</p>
               </div>
             </div>
-            <div className="mt-3 divide-y divide-line">
+            <div className="mt-4 space-y-3">
+              <label className="flex items-center gap-4 rounded-xl border border-line bg-soft/40 p-3">
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">In-app notifications</span>
+                  <span className="mt-0.5 block text-xs text-muted">Show reminders in your EarnEd notification center</span>
+                </span>
+                <input type="checkbox" checked={reminders.in_app_enabled} onChange={(event) => { setReminders((previous) => ({ ...previous, in_app_enabled: event.target.checked })); setSaved(false); }} className="h-5 w-5 accent-[#76BE3F]" />
+              </label>
+              <label className="flex items-center gap-4 rounded-xl border border-line bg-soft/40 p-3">
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">Email notifications</span>
+                  <span className="mt-0.5 block text-xs text-muted">Send selected reminders to {user?.email || "your account email"}</span>
+                </span>
+                <input type="checkbox" checked={reminders.email_enabled} onChange={(event) => { setReminders((previous) => ({ ...previous, email_enabled: event.target.checked })); setSaved(false); }} className="h-5 w-5 accent-[#76BE3F]" />
+              </label>
+            </div>
+            <div className="mt-4 divide-y divide-line">
               {([
                 ["payday", "Payday reminders", "A reminder before a workplace payday"],
                 ["overdue", "Overdue payment alerts", "A notice when an expected payment is late"],
@@ -443,7 +481,7 @@ export function AccountPage() {
                 </label>
               ))}
             </div>
-            <p className="text-xs text-muted">These preferences are saved to your account. Automatic email or push notifications are not currently enabled.</p>
+            <p className="text-xs text-muted">Your choices are saved to your account. Email delivery will activate after the EarnEd email service is configured and verified.</p>
             <Button className="mt-4" variant="secondary" onClick={handleSaveChanges} disabled={saving}>{saving ? "Saving..." : "Save reminder preferences"}</Button>
           </Card>
 
