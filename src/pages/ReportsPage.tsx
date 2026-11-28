@@ -125,7 +125,7 @@ export function ReportsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [range, setRange] = useState("daily");
   const [workplaceFilter, setWorkplaceFilter] = useState("all");
-  const [customStart, setCustomStart] = useState(defaultStart);
+  const [customStart, setCustomStart] = useState(() => dateKey(new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1)));
   const [customEnd, setCustomEnd] = useState(today);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
