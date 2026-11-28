@@ -148,6 +148,8 @@ export function AppShell() {
           data.session.user.user_metadata?.avatar_url || data.session.user.user_metadata?.picture || "",
         );
       } else {
+        avatarRequestRef.current += 1;
+        avatarUserIdRef.current = null;
         setUserAvatar("");
       }
       setTimezone(data.session?.user.user_metadata?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
@@ -172,6 +174,8 @@ export function AppShell() {
             session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
           );
         } else {
+          avatarRequestRef.current += 1;
+          avatarUserIdRef.current = null;
           setUserAvatar("");
         }
         setTimezone(session?.user.user_metadata?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
