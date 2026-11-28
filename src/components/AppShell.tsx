@@ -79,7 +79,13 @@ export function AppShell() {
     // Ignore older auth-event requests so stale responses cannot replace the latest image.
     if (requestId !== avatarRequestRef.current) return;
 
-    if (!error && profile?.avatar_path) {
+    if (error) {
+      // Do not show potentially outdated metadata while the saved avatar cannot be checked.
+      setUserAvatar("");
+      return;
+    }
+
+    if (profile?.avatar_path) {
       const publicUrl = supabase.storage.from("avatars").getPublicUrl(profile.avatar_path).data.publicUrl;
       setUserAvatar(`${publicUrl}?v=${encodeURIComponent(profile.updated_at || Date.now())}`);
       return;
