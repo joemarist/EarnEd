@@ -83,7 +83,7 @@ export function AccountPage() {
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
   const [reminders, setReminders] = useState<ReminderPreferences>(defaultReminders);
   const [darkMode, setDarkMode] = useState(() => {
-    try { return localStorage.getItem("earned-theme") === "dark"; } catch { return false; }
+    return typeof document !== "undefined" && document.documentElement.classList.contains("dark");
   });
 
   useEffect(() => {
