@@ -130,6 +130,8 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [dailyPage, setDailyPage] = useState(1);
+  const dailyPageSize = 8;
 
   useEffect(() => {
     let active = true;
@@ -225,6 +227,10 @@ export function ReportsPage() {
     payment.payment_date <= selectedRange.end &&
     matchesWorkplace(payment.workplace_id, payment.workplace_name)
   ), [payments, selectedRange, workplaceFilter, workplaceById]);
+  useEffect(() => {
+    setDailyPage(1);
+  }, [range, workplaceFilter, customStart, customEnd]);
+
   const dailyIncomeRows = useMemo(() => {
     const rows = new Map<string, { date: string; workplace: string; currency: string; classes: number; earned: number }>();
     for (const log of filteredLogs) {
@@ -239,6 +245,12 @@ export function ReportsPage() {
     }
     return Array.from(rows.values()).sort((a, b) => b.date.localeCompare(a.date) || a.workplace.localeCompare(b.workplace));
   }, [filteredLogs, workplaceById, workplaces]);
+
+  const dailyPageCount = Math.max(1, Math.ceil(dailyIncomeRows.length / dailyPageSize));
+  const safeDailyPage = Math.min(dailyPage, dailyPageCount);
+  const paginatedDailyIncomeRows = dailyIncomeRows.slice((safeDailyPage - 1) * dailyPageSize, safeDailyPage * dailyPageSize);
+  const dailyRowsStart = dailyIncomeRows.length === 0 ? 0 : (safeDailyPage - 1) * dailyPageSize + 1;
+  const dailyRowsEnd = Math.min(safeDailyPage * dailyPageSize, dailyIncomeRows.length);
 
   const months = useMemo(() => {
     if (!selectedRange.start || !selectedRange.end || selectedRange.end < selectedRange.start) return [];
@@ -583,27 +595,85 @@ export function ReportsPage() {
             {range === "daily" && (
               <Card className="mb-5 overflow-hidden">
                 <div className="border-b border-line p-5">
-                  <h2 className="font-bold">Daily income breakdown · {summary.currency}</h2>
-                  <p className="text-xs text-muted">Each row uses the date and workplace saved in your Daily Logs</p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="font-bold">Daily income breakdown · {summary.currency}</h2>
+                      <p className="mt-1 text-xs text-muted">Browse your saved class entries in smaller, easy-to-read pages</p>
+                    </div>
+                    <span className="self-start rounded-full bg-soft px-3 py-1.5 text-xs font-medium text-muted sm:self-auto">
+                      {dailyIncomeRows.filter((row) => row.currency === summary.currency).length} entries
+                    </span>
+                  </div>
                 </div>
                 {dailyIncomeRows.filter((row) => row.currency === summary.currency).length === 0 ? (
-                  <p className="p-5 text-sm text-muted">No class income recorded in this currency during the last 30 days.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[520px] text-left text-sm">
-                      <thead className="bg-soft text-xs uppercase text-muted"><tr><th className="px-5 py-3">Date</th><th className="px-4 py-3">Workplace</th><th className="px-4 py-3">Classes</th><th className="px-5 py-3 text-right">Earned</th></tr></thead>
-                      <tbody className="divide-y divide-line">
-                        {dailyIncomeRows.filter((row) => row.currency === summary.currency).map((row) => (
-                          <tr key={row.date + row.workplace}>
-                            <td className="whitespace-nowrap px-5 py-3">{new Date(row.date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</td>
-                            <td className="px-4 py-3 font-medium">{row.workplace}</td>
-                            <td className="px-4 py-3">{row.classes.toLocaleString()}</td>
-                            <td className="whitespace-nowrap px-5 py-3 text-right font-bold">{formatMoney(row.earned, row.currency)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="p-6 text-center">
+                    <p className="text-sm font-semibold">No daily entries yet</p>
+                    <p className="mt-1 text-xs text-muted">Class income for this currency will appear here when you add Daily Logs.</p>
                   </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 border-b border-line bg-soft/40 p-4 sm:grid-cols-3">
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted">Showing entries</p>
+                        <p className="mt-1 text-lg font-bold tabular-nums">{dailyRowsStart}–{dailyRowsEnd}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted">Page total</p>
+                        <p className="mt-1 text-lg font-bold tabular-nums">{formatMoney(paginatedDailyIncomeRows.filter((row) => row.currency === summary.currency).reduce((total, row) => total + row.earned, 0), summary.currency)}</p>
+                      </div>
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted">Current page</p>
+                        <p className="mt-1 text-lg font-bold tabular-nums">{safeDailyPage} <span className="text-sm font-medium text-muted">of {dailyPageCount}</span></p>
+                      </div>
+                    </div>
+                    <div className="hidden overflow-x-auto sm:block">
+                      <table className="w-full min-w-[560px] text-left text-sm">
+                        <thead className="bg-soft/60 text-[11px] uppercase tracking-wide text-muted">
+                          <tr>
+                            <th className="px-5 py-3 font-semibold">Date</th>
+                            <th className="px-4 py-3 font-semibold">Workplace</th>
+                            <th className="px-4 py-3 text-center font-semibold">Classes</th>
+                            <th className="px-5 py-3 text-right font-semibold">Earned</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-line">
+                          {paginatedDailyIncomeRows.filter((row) => row.currency === summary.currency).map((row) => (
+                            <tr key={row.date + row.workplace} className="transition-colors hover:bg-soft/40">
+                              <td className="whitespace-nowrap px-5 py-3.5 font-medium">{new Date(row.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</td>
+                              <td className="px-4 py-3.5">{row.workplace}</td>
+                              <td className="px-4 py-3.5 text-center tabular-nums">{row.classes.toLocaleString()}</td>
+                              <td className="whitespace-nowrap px-5 py-3.5 text-right font-bold tabular-nums">{formatMoney(row.earned, row.currency)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="space-y-3 p-3 sm:hidden">
+                      {paginatedDailyIncomeRows.filter((row) => row.currency === summary.currency).map((row) => (
+                        <div key={row.date + row.workplace} className="rounded-xl border border-line bg-surface p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium text-muted">{new Date(row.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</p>
+                              <p className="mt-1 truncate text-sm font-semibold">{row.workplace}</p>
+                            </div>
+                            <p className="shrink-0 text-sm font-bold tabular-nums">{formatMoney(row.earned, row.currency)}</p>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between border-t border-line pt-2 text-xs text-muted">
+                            <span>Classes taught</span>
+                            <span className="font-semibold tabular-nums text-ink">{row.classes.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-col gap-3 border-t border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-xs text-muted">Showing <span className="font-semibold text-ink">{dailyRowsStart}–{dailyRowsEnd}</span> of {dailyIncomeRows.length} entries</p>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="secondary" disabled={safeDailyPage <= 1} onClick={() => setDailyPage((page) => Math.max(1, page - 1))}>Previous</Button>
+                        <span className="min-w-[76px] text-center text-xs font-medium tabular-nums text-muted">{safeDailyPage} / {dailyPageCount}</span>
+                        <Button size="sm" variant="secondary" disabled={safeDailyPage >= dailyPageCount} onClick={() => setDailyPage((page) => Math.min(dailyPageCount, page + 1))}>Next</Button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </Card>
             )}
