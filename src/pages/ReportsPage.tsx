@@ -537,7 +537,8 @@ export function ReportsPage() {
           </section>
 
           {reportByCurrency.map((summary) => (
-            <Card key={summary.currency} className="mb-5 p-5">
+            <div key={summary.currency} className="contents">
+            <Card className="mb-5 p-5">
               <div>
                 <h2 className="font-bold">{range === "daily" ? "Daily" : range === "weekly" ? "Weekly" : range === "yearly" ? "Yearly" : "Monthly"} income · {summary.currency}</h2>
                 <p className="text-xs text-muted">Daily Log income compared with payments received in each selected period</p>
@@ -606,6 +607,7 @@ export function ReportsPage() {
                 )}
               </Card>
             )}
+            </div>
           ))}
 
           {workplaceIncomeGroups.map((group) => (
