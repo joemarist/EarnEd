@@ -553,7 +553,7 @@ export function ReportsPage() {
             <Card className="mb-5 p-5">
               <div>
                 <h2 className="font-bold">{range === "daily" ? "Daily" : range === "weekly" ? "Weekly" : range === "yearly" ? "Yearly" : "Monthly"} income · {summary.currency}</h2>
-                <p className="text-xs text-muted">Daily Log income compared with payments received in each selected period</p>
+                <p className="text-xs text-muted">{range === "daily" || range === "weekly" ? "Payments received in each selected period" : "Daily Log income compared with payments received in each selected period"}</p>
               </div>
               <div className="mt-5 h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -586,7 +586,7 @@ export function ReportsPage() {
                       formatter={(value) => formatMoney(Number(value), summary.currency)}
                     />
                     <Legend wrapperStyle={{ color: "var(--muted)" }} />
-                    <Bar dataKey="earned" name="Earned" fill="#76BE3F" radius={[5, 5, 0, 0]} maxBarSize={28} />
+                    {range !== "daily" && range !== "weekly" && <Bar dataKey="earned" name="Earned" fill="#76BE3F" radius={[5, 5, 0, 0]} maxBarSize={28} />}
                     <Bar dataKey="received" name="Received" fill="#2F7D6D" radius={[5, 5, 0, 0]} maxBarSize={28} />
                   </BarChart>
                 </ResponsiveContainer>
