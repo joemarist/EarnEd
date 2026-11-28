@@ -668,9 +668,9 @@ export function ReportsPage() {
                     <div className="flex flex-col gap-3 border-t border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                       <p className="text-xs text-muted">Showing <span className="font-semibold text-ink">{dailyRowsStart}–{dailyRowsEnd}</span> of {dailyIncomeRows.length} entries</p>
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="secondary" disabled={safeDailyPage <= 1} onClick={() => setDailyPage((page) => Math.max(1, page - 1))}>Previous</Button>
+                        <Button className="min-h-9 px-3 text-xs" variant="secondary" disabled={safeDailyPage <= 1} onClick={() => setDailyPage((page) => Math.max(1, page - 1))}>Previous</Button>
                         <span className="min-w-[76px] text-center text-xs font-medium tabular-nums text-muted">{safeDailyPage} / {dailyPageCount}</span>
-                        <Button size="sm" variant="secondary" disabled={safeDailyPage >= dailyPageCount} onClick={() => setDailyPage((page) => Math.min(dailyPageCount, page + 1))}>Next</Button>
+                        <Button className="min-h-9 px-3 text-xs" variant="secondary" disabled={safeDailyPage >= dailyPageCount} onClick={() => setDailyPage((page) => Math.min(dailyPageCount, page + 1))}>Next</Button>
                       </div>
                     </div>
                   </>
