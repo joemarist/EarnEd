@@ -1,9 +1,11 @@
 import { createBrowserRouter } from "react-router";
 import { AppShell } from "../components/AppShell";
+import { RouteErrorBoundary } from "../components/RouteErrorBoundary";
 
 export const router = createBrowserRouter([
   {
     path: "/",
+    errorElement: <RouteErrorBoundary />,
     lazy: async () => {
       const { LandingPage } = await import("../pages/LandingPage");
       return { Component: LandingPage };
@@ -11,6 +13,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/login",
+    errorElement: <RouteErrorBoundary />,
     lazy: async () => {
       const { LoginPage } = await import("../pages/LoginPage");
       return { Component: LoginPage };
@@ -19,6 +22,7 @@ export const router = createBrowserRouter([
   {
     path: "/app",
     Component: AppShell,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         index: true,
@@ -80,6 +84,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "*",
+    errorElement: <RouteErrorBoundary />,
     lazy: async () => {
       const { LandingPage } = await import("../pages/LandingPage");
       return { Component: LandingPage };
