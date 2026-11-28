@@ -150,3 +150,4 @@
 public/My_gcash.jpg -filter -diff -merge -text
 public/developer-placeholder.png -filter -diff -merge -text
 public/brand/*.png -filter -diff -merge -text
+public/earned-social-preview.png -filter -diff -merge -text
