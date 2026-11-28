@@ -120,7 +120,6 @@ function csvCell(value: string | number) {
 
 export function ReportsPage() {
   const today = dateKey(new Date());
-  const defaultStart = dateKey(new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1));
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -226,6 +225,20 @@ export function ReportsPage() {
     payment.payment_date <= selectedRange.end &&
     matchesWorkplace(payment.workplace_id, payment.workplace_name)
   ), [payments, selectedRange, workplaceFilter, workplaceById]);
+  const dailyIncomeRows = useMemo(() => {
+    const rows = new Map<string, { date: string; workplace: string; currency: string; classes: number; earned: number }>();
+    for (const log of filteredLogs) {
+      const workplace = getLogWorkplace(log);
+      const name = workplace?.name ?? log.workplace ?? "Unknown workplace";
+      const currency = workplace?.currency ?? "USD";
+      const key = log.log_date + "|" + name + "|" + currency;
+      const row = rows.get(key) ?? { date: log.log_date, workplace: name, currency, classes: 0, earned: 0 };
+      row.classes += Number(log.classes ?? 0);
+      row.earned += Number(log.income ?? 0);
+      rows.set(key, row);
+    }
+    return Array.from(rows.values()).sort((a, b) => b.date.localeCompare(a.date) || a.workplace.localeCompare(b.workplace));
+  }, [filteredLogs, workplaceById, workplaces]);
 
   const months = useMemo(() => {
     if (!selectedRange.start || !selectedRange.end || selectedRange.end < selectedRange.start) return [];
@@ -566,6 +579,33 @@ export function ReportsPage() {
                 </ResponsiveContainer>
               </div>
             </Card>
+            {range === "daily" && (
+              <Card className="mb-5 overflow-hidden">
+                <div className="border-b border-line p-5">
+                  <h2 className="font-bold">Daily income breakdown · {summary.currency}</h2>
+                  <p className="text-xs text-muted">Each row uses the date and workplace saved in your Daily Logs</p>
+                </div>
+                {dailyIncomeRows.filter((row) => row.currency === summary.currency).length === 0 ? (
+                  <p className="p-5 text-sm text-muted">No class income recorded in this currency during the last 30 days.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[520px] text-left text-sm">
+                      <thead className="bg-soft text-xs uppercase text-muted"><tr><th className="px-5 py-3">Date</th><th className="px-4 py-3">Workplace</th><th className="px-4 py-3">Classes</th><th className="px-5 py-3 text-right">Earned</th></tr></thead>
+                      <tbody className="divide-y divide-line">
+                        {dailyIncomeRows.filter((row) => row.currency === summary.currency).map((row) => (
+                          <tr key={row.date + row.workplace}>
+                            <td className="whitespace-nowrap px-5 py-3">{new Date(row.date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</td>
+                            <td className="px-4 py-3 font-medium">{row.workplace}</td>
+                            <td className="px-4 py-3">{row.classes.toLocaleString()}</td>
+                            <td className="whitespace-nowrap px-5 py-3 text-right font-bold">{formatMoney(row.earned, row.currency)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
+            )}
           ))}
 
           {workplaceIncomeGroups.map((group) => (
