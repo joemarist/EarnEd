@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   Cell,
   Pie,
@@ -89,6 +89,31 @@ function monthLabel(value: string) {
   });
 }
 
+function addDays(value: string, amount: number) {
+  const date = new Date(`${value}T00:00:00`);
+  date.setDate(date.getDate() + amount);
+  return dateKey(date);
+}
+
+function periodKey(value: string, range: string) {
+  if (range === "daily") return value;
+  const date = new Date(`${value}T00:00:00`);
+  if (range === "weekly") {
+    const day = (date.getDay() + 6) % 7;
+    date.setDate(date.getDate() - day);
+    return dateKey(date);
+  }
+  if (range === "yearly") return value.slice(0, 4);
+  return monthKey(value);
+}
+
+function periodLabel(value: string, range: string) {
+  if (range === "daily") return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (range === "weekly") return `Week of ${new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+  if (range === "yearly") return value;
+  return monthLabel(value);
+}
+
 function csvCell(value: string | number) {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
@@ -99,7 +124,7 @@ export function ReportsPage() {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [range, setRange] = useState("last6");
+  const [range, setRange] = useState("daily");
   const [workplaceFilter, setWorkplaceFilter] = useState("all");
   const [customStart, setCustomStart] = useState(defaultStart);
   const [customEnd, setCustomEnd] = useState(today);
@@ -163,17 +188,12 @@ export function ReportsPage() {
   }, [reloadKey]);
 
   const selectedRange = useMemo(() => {
-    if (range === "year") {
-      return {
-        start: `${new Date().getFullYear()}-01-01`,
-        end: today,
-      };
-    }
-    if (range === "custom") {
-      return { start: customStart, end: customEnd };
-    }
-    return { start: defaultStart, end: today };
-  }, [range, customStart, customEnd, defaultStart, today]);
+    if (range === "custom") return { start: customStart, end: customEnd };
+    if (range === "daily") return { start: addDays(today, -29), end: today };
+    if (range === "weekly") return { start: addDays(today, -83), end: today };
+    if (range === "yearly") return { start: `${new Date().getFullYear() - 4}-01-01`, end: today };
+    return { start: dateKey(new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1)), end: today };
+  }, [range, customStart, customEnd, today]);
 
   const workplaceById = useMemo(
     () => new Map(workplaces.map((workplace) => [workplace.id, workplace])),
@@ -209,17 +229,23 @@ export function ReportsPage() {
 
   const months = useMemo(() => {
     if (!selectedRange.start || !selectedRange.end || selectedRange.end < selectedRange.start) return [];
-    const [startYear, startMonth] = selectedRange.start.split("-").map(Number);
-    const [endYear, endMonth] = selectedRange.end.split("-").map(Number);
     const result: string[] = [];
-    const cursor = new Date(startYear, startMonth - 1, 1);
-    const last = new Date(endYear, endMonth - 1, 1);
-    while (cursor <= last && result.length < 120) {
-      result.push(monthKey(dateKey(cursor)));
-      cursor.setMonth(cursor.getMonth() + 1);
+    if (range === "daily") {
+      for (let cursor = selectedRange.start; cursor <= selectedRange.end && result.length < 60; cursor = addDays(cursor, 1)) result.push(cursor);
+    } else if (range === "weekly") {
+      let cursor = periodKey(selectedRange.start, "weekly");
+      while (cursor <= selectedRange.end && result.length < 60) { result.push(cursor); cursor = addDays(cursor, 7); }
+    } else if (range === "yearly") {
+      for (let year = Number(selectedRange.start.slice(0, 4)); year <= Number(selectedRange.end.slice(0, 4)) && result.length < 30; year += 1) result.push(String(year));
+    } else {
+      const [startYear, startMonth] = selectedRange.start.split("-").map(Number);
+      const [endYear, endMonth] = selectedRange.end.split("-").map(Number);
+      const cursor = new Date(startYear, startMonth - 1, 1);
+      const last = new Date(endYear, endMonth - 1, 1);
+      while (cursor <= last && result.length < 120) { result.push(monthKey(dateKey(cursor))); cursor.setMonth(cursor.getMonth() + 1); }
     }
     return result;
-  }, [selectedRange]);
+  }, [selectedRange, range]);
 
   const reportByCurrency = useMemo(() => {
     const currencies = new Map<string, {
@@ -247,7 +273,7 @@ export function ReportsPage() {
       const income = Number(log.income ?? 0);
       summary.earned += income;
       summary.classes += Number(log.classes ?? 0);
-      const month = summary.monthly.find((item) => item.month === monthKey(log.log_date));
+      const month = summary.monthly.find((item) => item.month === periodKey(log.log_date, range));
       if (month) month.earned += income;
     }
 
@@ -256,7 +282,7 @@ export function ReportsPage() {
       const summary = ensureCurrency(currency);
       const amount = Number(payment.amount ?? 0);
       summary.received += amount;
-      const month = summary.monthly.find((item) => item.month === monthKey(payment.payment_date));
+      const month = summary.monthly.find((item) => item.month === periodKey(payment.payment_date, range));
       if (month) month.received += amount;
     }
 
@@ -272,7 +298,7 @@ export function ReportsPage() {
           { month: "", earned: 0, received: 0 },
         ),
       }));
-  }, [filteredLogs, filteredPayments, months, workplaceById, workplaces]);
+  }, [filteredLogs, filteredPayments, months, workplaceById, workplaces, range]);
 
   const workplaceRows = useMemo(() => {
     const rows = new Map<string, {
@@ -404,8 +430,10 @@ export function ReportsPage() {
           <label className="text-sm font-semibold">
             Date range
             <Select value={range} onChange={(event) => setRange(event.target.value)} className="mt-2 w-full">
-              <option value="last6">Last 6 months</option>
-              <option value="year">This year</option>
+              <option value="daily">Daily · last 30 days</option>
+              <option value="weekly">Weekly · last 12 weeks</option>
+              <option value="monthly">Monthly · last 12 months</option>
+              <option value="yearly">Yearly · last 5 years</option>
               <option value="custom">Custom range</option>
             </Select>
           </label>
@@ -475,7 +503,7 @@ export function ReportsPage() {
                     <p className="mt-1 font-bold">{formatMoney(summary.averagePerClass, summary.currency)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted">Average earned per month</p>
+                    <p className="text-xs text-muted">Average per selected period</p>
                     <p className="mt-1 font-bold">{formatMoney(summary.averageMonthly, summary.currency)}</p>
                   </div>
                   <div>
@@ -484,10 +512,10 @@ export function ReportsPage() {
                   </div>
                 </div>
                 <div className="mt-3 rounded-xl bg-soft p-3">
-                  <p className="text-xs text-muted">Highest earning month</p>
+                  <p className="text-xs text-muted">Highest earning period</p>
                   <p className="mt-1 font-semibold">
                     {summary.highestMonth.month
-                      ? `${monthLabel(summary.highestMonth.month)} · ${formatMoney(summary.highestMonth.earned, summary.currency)}`
+                      ? `${periodLabel(summary.highestMonth.month, range)} · ${formatMoney(summary.highestMonth.earned, summary.currency)}`
                       : "No class income recorded"}
                   </p>
                 </div>
@@ -498,26 +526,17 @@ export function ReportsPage() {
           {reportByCurrency.map((summary) => (
             <Card key={summary.currency} className="mb-5 p-5">
               <div>
-                <h2 className="font-bold">Monthly income trend · {summary.currency}</h2>
-                <p className="text-xs text-muted">Earned from Daily Logs compared with payments received during each month</p>
+                <h2 className="font-bold">{range === "daily" ? "Daily" : range === "weekly" ? "Weekly" : range === "yearly" ? "Yearly" : "Monthly"} income · {summary.currency}</h2>
+                <p className="text-xs text-muted">Daily Log income compared with payments received in each selected period</p>
               </div>
               <div className="mt-5 h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={summary.monthly}>
-                    <defs>
-                      <linearGradient id={`earnedFill-${summary.currency}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#76BE3F" stopOpacity={0.28} />
-                        <stop offset="95%" stopColor="#76BE3F" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id={`receivedFill-${summary.currency}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#2F7D6D" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#2F7D6D" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
+                  <BarChart data={summary.monthly} barGap={4}>
                     <CartesianGrid vertical={false} stroke="var(--line)" />
                     <XAxis
                       dataKey="month"
-                      tickFormatter={monthLabel}
+                      interval={range === "daily" ? 4 : 0}
+                      tickFormatter={(value) => periodLabel(String(value), range)}
                       axisLine={false}
                       tickLine={false}
                       tick={{ fill: "var(--muted)", fontSize: 11 }}
@@ -537,13 +556,13 @@ export function ReportsPage() {
                       }}
                       labelStyle={{ color: "var(--ink)" }}
                       itemStyle={{ color: "var(--ink)" }}
-                      labelFormatter={(value) => monthLabel(String(value))}
+                      labelFormatter={(value) => periodLabel(String(value), range)}
                       formatter={(value) => formatMoney(Number(value), summary.currency)}
                     />
                     <Legend wrapperStyle={{ color: "var(--muted)" }} />
-                    <Area type="monotone" dataKey="earned" name="Earned" stroke="#76BE3F" strokeWidth={2.5} fill={`url(#earnedFill-${summary.currency})`} />
-                    <Area type="monotone" dataKey="received" name="Received" stroke="#2F7D6D" strokeWidth={2.5} fill={`url(#receivedFill-${summary.currency})`} />
-                  </AreaChart>
+                    <Bar dataKey="earned" name="Earned" fill="#76BE3F" radius={[5, 5, 0, 0]} maxBarSize={28} />
+                    <Bar dataKey="received" name="Received" fill="#2F7D6D" radius={[5, 5, 0, 0]} maxBarSize={28} />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </Card>
@@ -555,8 +574,8 @@ export function ReportsPage() {
                 <h2 className="font-bold">Income by workplace · {group.currency}</h2>
                 <p className="text-xs text-muted">Share of recorded class income by workplace for the selected filters</p>
               </div>
-              <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(220px,.9fr)] lg:items-center">
-                <div className="h-64 min-w-0">
+              <div className="mt-4 grid min-w-0 gap-6 lg:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.1fr)] lg:items-center">
+                <div className="h-72 min-w-0 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -565,13 +584,11 @@ export function ReportsPage() {
                         nameKey="workplace"
                         cx="50%"
                         cy="50%"
-                        innerRadius="52%"
-                        outerRadius="82%"
+                        innerRadius="58%"
+                        outerRadius="78%"
                         paddingAngle={3}
                         stroke="var(--surface)"
                         strokeWidth={3}
-                        labelLine={false}
-                        label={({ percent }) => (Number(percent) * 100).toFixed(0) + "%"}
                       >
                         {group.data.map((entry, index) => (
                           <Cell key={entry.workplace} fill={["#76BE3F", "#2F7D6D", "#4F83CC", "#D69E36", "#9B72CF", "#D97777"][index % 6]} />
@@ -585,12 +602,12 @@ export function ReportsPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="space-y-3">
+                <div className="min-w-0 space-y-3 rounded-xl bg-soft/50 p-4">
                   {group.data.map((entry, index) => {
                     const total = group.data.reduce((sum, item) => sum + item.earned, 0);
                     const share = total > 0 ? (entry.earned / total) * 100 : 0;
                     return (
-                      <div key={entry.workplace} className="flex items-center gap-3">
+                      <div key={entry.workplace} className="flex min-w-0 items-center gap-3 border-b border-line/70 pb-3 last:border-0 last:pb-0">
                         <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: ["#76BE3F", "#2F7D6D", "#4F83CC", "#D69E36", "#9B72CF", "#D97777"][index % 6] }} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold">{entry.workplace}</p>
