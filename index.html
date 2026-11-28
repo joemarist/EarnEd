@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#76BE3F" />
+    <script>
+      try {
+        if (localStorage.getItem("earned-theme") === "dark") {
+          document.documentElement.classList.add("dark");
+        }
+      } catch { /* Keep the default light theme when storage is unavailable. */ }
+    </script>
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <script type="application/ld+json">
       {
