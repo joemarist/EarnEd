@@ -14,7 +14,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router";
 import { Brand } from "./Brand";
@@ -59,18 +59,34 @@ export function AppShell() {
   const [hasSession, setHasSession] = useState(false);
   const [userFirstName, setUserFirstName] = useState("User");
   const [userAvatar, setUserAvatar] = useState("");
+  const avatarRequestRef = useRef(0);
+  const avatarUserIdRef = useRef<string | null>(null);
 
   async function loadUserAvatar(userId: string, fallback = "") {
-    setUserAvatar(fallback);
-    const { data: profile } = await supabase
+    const requestId = ++avatarRequestRef.current;
+
+    if (avatarUserIdRef.current !== userId) {
+      avatarUserIdRef.current = userId;
+      setUserAvatar("");
+    }
+
+    const { data: profile, error } = await supabase
       .from("user_profiles")
       .select("avatar_path, updated_at")
       .eq("user_id", userId)
       .maybeSingle();
-    if (profile?.avatar_path) {
+
+    // Ignore older auth-event requests so stale responses cannot replace the latest image.
+    if (requestId !== avatarRequestRef.current) return;
+
+    if (!error && profile?.avatar_path) {
       const publicUrl = supabase.storage.from("avatars").getPublicUrl(profile.avatar_path).data.publicUrl;
       setUserAvatar(`${publicUrl}?v=${encodeURIComponent(profile.updated_at || Date.now())}`);
+      return;
     }
+
+    // Use the Google photo only when no saved EarnEd avatar is available.
+    setUserAvatar(fallback);
   }
   const [showSupport, setShowSupport] = useState(false);
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
